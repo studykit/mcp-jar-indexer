@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(.conversation/**)",
+      "Glob(.conversation/**)",
+      "Grep(.conversation/**)",
+      "LS(.conversation/**)",
+      "Edit(.conversation/**)",
+      "Write(.conversation/**)",
+      "MultiEdit(.conversation/**)"
+    ]
+  }
+}
