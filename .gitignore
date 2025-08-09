@@ -128,5 +128,5 @@ cython_debug/
 
 # OS-specific
 .DS_Store
-.conversation
+.conversation/
 .obsidian/

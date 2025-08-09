@@ -3,7 +3,32 @@
 ## 개요
 Java/Kotlin JAR 파일의 소스 코드를 인덱싱하고 Claude Code가 외부 라이브러리 소스를 효율적으로 탐색할 수 있게 하는 MCP 서버입니다.
 
-## MCP Tools 목록 (14개)
+제공하는 MCP Tool 목록을 다음과 같이 분류할 수 있습니다:
+
+### 용도에 따른 분류
+**탐색적 검색:**
+- `list_packages`: 패키지 구조 트리 조회
+- `list_types`: 패키지별 타입(클래스/인터페이스) 목록
+- `get_type_source`: 타입 전체 소스코드 조회
+
+**메서드/필드 중심 분석:**
+- `list_methods`: 클래스/인터페이스의 모든 메서드 목록 조회 (필터링 지원)
+- `list_fields`: 클래스/인터페이스의 모든 필드 목록 조회 (필터링 지원)
+- `get_method_source`: 메서드 구현 소스만 조회 (코드 분석용)
+- `get_import_section`: 타입의 import 구문 소스 조회 (의존성 분석용)
+
+**파일 기반 탐색:**
+- `list_folder_tree`: JAR 내부 폴더 구조 조회
+- `search_file_names`: 파일명 패턴 검색 (glob/regex)
+- `search_file_content`: 파일 내용 기반 검색
+- `get_file`: 특정 파일의 부분/전체 조회
+
+**:관리 도구**
+- `register_source`: 소스 JAR 파일 또는 소스 디렉토리 직접 등록 (Git 저장소 지원)
+- `index_artifact`: 아티팩트 사전 인덱싱 (준비 작업용)
+- `list_indexed_artifacts`: 인덱싱된 아티팩트 목록 조회
+
+## MCP Tools Specification (14개)
 
 ### 0. register_source
 사용자가 직접 제공한 소스 JAR 파일 또는 소스 디렉토리를 시스템에 등록
