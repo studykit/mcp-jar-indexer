@@ -30,6 +30,7 @@ Java/Kotlin JAR 파일의 소스 코드를 인덱싱하고 Claude Code가 외부
 
 ## MCP Tools Specification (14개)
 
+
 ### 0. register_source
 사용자가 직접 제공한 소스 JAR 파일 또는 소스 디렉토리를 시스템에 등록
 
@@ -50,7 +51,7 @@ register_source(
     version: "5.3.21",
     source_uri: "git+https://github.com/spring-projects/spring-framework.git",
     auto_index: True,  # 선택사항, 기본값: True (등록 후 자동 인덱싱 여부)
-    git_ref: "v5.3.21"  # 선택사항, Git URI인 경우 태그/브랜치/커밋 SHA 지정
+    git_ref: "v5.3.21"  # 선택사항, 단, Git URI인 경우 태그/브랜치/커밋 SHA 지정 필수
 )
 ```
 
@@ -66,6 +67,7 @@ register_source(
 - **소스 디렉토리**: `file:///Users/user/projects/spring-framework/spring-core/src/main/java`
 - **프로젝트 루트**: `file:///Users/user/projects/my-library/src`
 - **압축 해제된 소스**: `file:///tmp/spring-core-5.3.21-sources`
+- **로컬 Git 저장소**: `file:///Users/user/projects/my-git-repo` (Git 저장소인 경우 git_ref 파라미터 사용 필수 )
 
 ### Git 저장소
 - **GitHub 공개 저장소**: `git+https://github.com/spring-projects/spring-framework.git`
@@ -106,55 +108,43 @@ register_source(
 **Error Response:**
 ```json
 {
-  "error": {
-    "type": "ResourceNotFound", 
-    "message": "소스를 찾을 수 없습니다: file:///invalid/path/spring-core-5.3.21-sources.jar"
-  }
+  "status": "resource_not_found", 
+  "message": "소스를 찾을 수 없습니다: file:///invalid/path/spring-core-5.3.21-sources.jar"
 }
 ```
 
 ```json
 {
-  "error": {
-    "type": "DownloadFailed",
-    "message": "원격 소스 다운로드 실패: https://invalid-url.com/spring-core-5.3.21-sources.jar"
-  }
+  "status": "download_failed",
+  "message": "원격 소스 다운로드 실패: https://invalid-url.com/spring-core-5.3.21-sources.jar"
 }
 ```
 
 ```json
 {
-  "error": {
-    "type": "InvalidSource",
-    "message": "유효하지 않은 소스입니다: file:///path/to/corrupted.jar"
-  }
+  "status": "invalid_source",
+  "message": "유효하지 않은 소스입니다: file:///path/to/corrupted.jar"
 }
 ```
 
 ```json
 {
-  "error": {
-    "type": "UnsupportedSourceType", 
-    "message": "지원하지 않는 소스 형태입니다. JAR 파일, Java/Kotlin 소스 디렉토리, 또는 Git 저장소만 지원됩니다."
-  }
+  "status": "unsupported_source_type", 
+  "message": "지원하지 않는 소스 형태입니다. JAR 파일, Java/Kotlin 소스 디렉토리, 또는 Git 저장소만 지원됩니다."
 }
 ```
 
 ```json
 {
-  "error": {
-    "type": "GitCloneFailed",
-    "message": "Git 저장소 복제 실패: git+https://github.com/user/repo.git (권한 없음 또는 저장소 없음)"
-  }
+  "status": "git_clone_failed",
+  "message": "Git 저장소 복제 실패: git+https://github.com/user/repo.git (권한 없음 또는 저장소 없음)"
 }
 ```
 
 ```json
 {
-  "error": {
-    "type": "GitRefNotFound",
-    "message": "Git 참조를 찾을 수 없습니다: v1.0.0 (태그/브랜치/커밋이 존재하지 않음)"
-  }
+  "status": "git_ref_not_found",
+  "message": "Git 참조를 찾을 수 없습니다: v1.0.0 (태그/브랜치/커밋이 존재하지 않음)"
 }
 ```
 
@@ -174,12 +164,7 @@ index_artifact(
 ```json
 {
   "status": "success",
-  "indexed_classes": 247,
-  "indexed_files": {
-    "java": 230,
-    "kotlin": 17
-  },
-  "cache_location": "~/.jar-indexer/cache/org.springframework/spring-core/5.3.21",
+  "cache_location": "~/.jar-indexer/code/org.springframework/spring-core/5.3.21",
   "processing_time": "2.3s"
 }
 ```

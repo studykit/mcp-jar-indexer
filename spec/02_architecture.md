@@ -26,18 +26,18 @@
 │  └─ Metadata Extractor                              │
 ├─────────────────────────────────────────────────────┤
 │  Storage Layer                                      │
-│  ├─ ~/.jar-indexer/cache/{artifact}/                │
+│  ├─ ~/.jar-indexer/code/{artifact}/                 │
 │  │  ├─ metadata.json    ├─ packages.json            │
 │  │  ├─ index.json       └─ sources/                 │
-│  └─ ~/.jar-indexer/downloads/*.jar                  │
+│  └─ ~/.jar-indexer/source-jar/*.jar                │
 └─────────────────────────────────────────────────────┘
 ```
 
-## 캐시 구조
+## Sotrage Layer Directory 구조
 
 ```
 ~/.jar-indexer/
-├── cache/                           # 인덱싱된 데이터
+├── code/                            # 인덱싱된 데이터
 │   ├── org.springframework/
 │   │   └── spring-core/
 │   │       └── 5.3.21/
@@ -54,7 +54,7 @@
 │               ├── index.json
 │               ├── packages.json
 │               └── sources/
-├── downloads/                       # 소스 JAR 파일들
+├── source-jar/                      # 소스 JAR 파일들
 │   ├── org.springframework/
 │   │   └── spring-core/
 │   │       └── 5.3.21/
@@ -63,6 +63,13 @@
 │       └── jackson-core/
 │           └── 2.13.3/
 │               └── jackson-core-2.13.3-sources.jar
+├── git-bare/                        # Git bare 저장소들
+│   ├── org.springframework/
+│   │   └── spring-framework/
+│   │       └── .git/                # bare clone
+│   └── com.company/
+│       └── my-library/
+│           └── .git/                # bare clone
 └── config.json                     # 서버 설정
 ```
 
