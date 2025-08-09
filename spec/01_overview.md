@@ -63,18 +63,24 @@ JAR Indexer MCP 서버는 다음과 같은 방식으로 이 문제를 해결합�
    ↓
 2. MCP Tool 호출 (예: get_type_source)
    ↓
-3. 소스 JAR 발견 (5단계 Waterfall)
-   ├─ 자체 캐시
-   ├─ Maven 로컬 저장소
-   ├─ Gradle 캐시
-   ├─ 원격 저장소 다운로드
-   └─ 사용자 직접 제공
+3. JAR 인덱싱 상태 확인
+   ├─ 인덱싱 완료: 5단계로 진행
+   └─ 인덱싱 없음: 에러 반환
    ↓
-4. JAR 인덱싱 (필요시)
-   ├─ 소스 파일 추출
-   ├─ Java/Kotlin 파싱
-   ├─ 메타데이터 생성
-   └─ 캐시에 저장
+4. [에러 시] Claude Code가 소스 등록 후 재시도
+   ├─ index_artifact 도구 호출
+   ├─ 소스 JAR 발견 (5단계 Waterfall)
+   │  ├─ 자체 캐시
+   │  ├─ Maven 로컬 저장소  
+   │  ├─ Gradle 캐시
+   │  ├─ 원격 저장소 다운로드
+   │  └─ 사용자 직접 제공
+   ├─ JAR 인덱싱 수행
+   │  ├─ 소스 파일 추출
+   │  ├─ Java/Kotlin 파싱
+   │  ├─ 메타데이터 생성
+   │  └─ 캐시에 저장
+   └─ 원래 요청 재수행
    ↓
 5. 요청된 데이터 조회 및 반환
    ↓
@@ -182,8 +188,7 @@ logging              # 로깅 (내장)
 │       └── jackson-core/
 │           └── 2.13.3/
 │               └── jackson-core-2.13.3-sources.jar
-├── config.json                     # 서버 설정
-└── user-provided.json              # 사용자 제공 JAR 경로
+└── config.json                     # 서버 설정
 ```
 
 ## Claude Code 통합 시나리오

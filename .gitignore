@@ -126,8 +126,5 @@ cython_debug/
 *.sublime-project
 *.sublime-workspace
 
-# Project-specific
-.conversation/
-
 # OS-specific
 .DS_Store

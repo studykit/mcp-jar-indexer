@@ -3,7 +3,135 @@
 ## 개요
 Java/Kotlin JAR 파일의 소스 코드를 인덱싱하고 Claude Code가 외부 라이브러리 소스를 효율적으로 탐색할 수 있게 하는 MCP 서버입니다.
 
-## MCP Tools 목록 (13개)
+## MCP Tools 목록 (14개)
+
+### 0. register_source
+사용자가 직접 제공한 소스 JAR 파일 또는 소스 디렉토리를 시스템에 등록
+
+**사용 시나리오:**
+- Claude Code가 Maven/Gradle로 소스 JAR을 다운로드한 후 URI 전달
+- IDE에서 다운로드한 소스 JAR 파일 직접 등록
+- 수동으로 다운로드한 소스 JAR 파일 등록
+- 로컬에 압축 해제된 소스 디렉토리 등록
+- 개발 중인 라이브러리의 src 디렉토리 등록
+- GitHub/GitLab의 오픈소스 라이브러리 특정 버전 등록
+- 사내 Git 저장소의 특정 브랜치/태그 등록
+
+**Request:**
+```python
+register_source(
+    group_id: "org.springframework",
+    artifact_id: "spring-core",
+    version: "5.3.21",
+    source_uri: "git+https://github.com/spring-projects/spring-framework.git",
+    auto_index: True,  # 선택사항, 기본값: True (등록 후 자동 인덱싱 여부)
+    git_ref: "v5.3.21"  # 선택사항, Git URI인 경우 태그/브랜치/커밋 SHA 지정
+)
+```
+
+**source_uri 형태:**
+
+### JAR 파일
+- **로컬 JAR (절대 경로)**: `file:///Users/user/.m2/repository/org/springframework/spring-core/5.3.21/spring-core-5.3.21-sources.jar`
+- **로컬 JAR (상대 경로)**: `file://./lib/spring-core-5.3.21-sources.jar`
+- **원격 JAR (Maven Central)**: `https://repo1.maven.org/maven2/org/springframework/spring-core/5.3.21/spring-core-5.3.21-sources.jar`
+- **원격 JAR (사내 저장소)**: `https://nexus.company.com/repository/maven-public/org/springframework/spring-core/5.3.21/spring-core-5.3.21-sources.jar`
+
+### 로컬 디렉토리
+- **소스 디렉토리**: `file:///Users/user/projects/spring-framework/spring-core/src/main/java`
+- **프로젝트 루트**: `file:///Users/user/projects/my-library/src`
+- **압축 해제된 소스**: `file:///tmp/spring-core-5.3.21-sources`
+
+### Git 저장소
+- **GitHub 공개 저장소**: `git+https://github.com/spring-projects/spring-framework.git`
+- **GitHub 사설 저장소**: `git+https://github.com/company/private-lib.git`
+- **GitLab**: `git+https://gitlab.com/user/project.git`
+- **사내 Git 서버**: `git+https://git.company.com/team/library.git`
+- **SSH 접근**: `git+ssh://git@github.com/user/repo.git`
+
+**git_ref 파라미터 (Git URI인 경우):**
+- **태그**: `"v5.3.21"`, `"1.0.0"`, `"release-2023.12"`
+- **브랜치**: `"main"`, `"develop"`, `"feature/new-api"`  
+- **커밋 SHA**: `"a1b2c3d4e5f6"`
+- **생략시 기본값**: `"main"` 또는 저장소 기본 브랜치
+
+**Response (auto_index=True, 기본값):**
+```json
+{
+  "group_id": "org.springframework",
+  "artifact_id": "spring-core", 
+  "version": "5.3.21",
+  "status": "registered_and_indexed",
+  "indexed": true
+}
+```
+
+**Response (auto_index=False):**
+```json
+{
+  "group_id": "org.springframework",
+  "artifact_id": "spring-core",
+  "version": "5.3.21",
+  "status": "registered_only",
+  "indexed": false,
+  "message": "소스가 등록되었습니다. index_artifact 도구로 인덱싱을 수행하세요."
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": {
+    "type": "ResourceNotFound", 
+    "message": "소스를 찾을 수 없습니다: file:///invalid/path/spring-core-5.3.21-sources.jar"
+  }
+}
+```
+
+```json
+{
+  "error": {
+    "type": "DownloadFailed",
+    "message": "원격 소스 다운로드 실패: https://invalid-url.com/spring-core-5.3.21-sources.jar"
+  }
+}
+```
+
+```json
+{
+  "error": {
+    "type": "InvalidSource",
+    "message": "유효하지 않은 소스입니다: file:///path/to/corrupted.jar"
+  }
+}
+```
+
+```json
+{
+  "error": {
+    "type": "UnsupportedSourceType", 
+    "message": "지원하지 않는 소스 형태입니다. JAR 파일, Java/Kotlin 소스 디렉토리, 또는 Git 저장소만 지원됩니다."
+  }
+}
+```
+
+```json
+{
+  "error": {
+    "type": "GitCloneFailed",
+    "message": "Git 저장소 복제 실패: git+https://github.com/user/repo.git (권한 없음 또는 저장소 없음)"
+  }
+}
+```
+
+```json
+{
+  "error": {
+    "type": "GitRefNotFound",
+    "message": "Git 참조를 찾을 수 없습니다: v1.0.0 (태그/브랜치/커밋이 존재하지 않음)"
+  }
+}
+```
 
 ### 1. index_artifact
 아티팩트 전체 인덱싱 (사전 준비용)
@@ -17,9 +145,10 @@ index_artifact(
 )
 ```
 
-**Response:**
+**Response (성공):**
 ```json
 {
+  "status": "success",
   "indexed_classes": 247,
   "indexed_files": {
     "java": 230,
@@ -29,6 +158,8 @@ index_artifact(
   "processing_time": "2.3s"
 }
 ```
+
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
 ### 2. list_indexed_artifacts
 인덱싱된 아티팩트 목록 조회
@@ -52,9 +183,10 @@ list_indexed_artifacts(
 - `"<6.0.0"` - 6.0.0 미만
 - `">=5.0.0,<6.0.0"` - 범위 지정 (5.0.0 이상 6.0.0 미만)
 
-**Response:**
+**Response (성공):**
 ```json
 {
+  "status": "success",
   "pagination": {
     "page": 1,
     "total_count": 23,
@@ -89,6 +221,8 @@ list_indexed_artifacts(
 }
 ```
 
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+
 ### 3. list_packages
 패키지 구조 탐색
 
@@ -116,6 +250,7 @@ list_packages(
 **Response (include_description=True):**
 ```json
 {
+  "status": "success",
   "max_depth": 2,
   "packages": [
     {
@@ -151,6 +286,7 @@ list_packages(
 **Response (include_description=False, 기본값):**
 ```json
 {
+  "status": "success",
   "max_depth": 2,
   "packages": [
     {
@@ -177,6 +313,8 @@ list_packages(
   ]
 }
 ```
+
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
 ### 4. list_types
 패키지별 타입 목록 조회 (클래스, 인터페이스, 열거형, 어노테이션 등)
@@ -208,6 +346,7 @@ list_types(
 **Response (include_description=True):**
 ```json
 {
+  "status": "success",
   "package": "org.springframework.core",
   "pagination": {
     "page": 1,
@@ -237,9 +376,10 @@ list_types(
 }
 ```
 
-**Response (include_description=False, 기본값):**
+**Response (성공, include_description=False, 기본값):**
 ```json
 {
+  "status": "success",
   "package": "org.springframework.core",
   "pagination": {
     "page": 1,
@@ -266,6 +406,8 @@ list_types(
 }
 ```
 
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+
 ### 5. get_type_source
 타입 전체 소스 조회
 
@@ -279,9 +421,10 @@ get_type_source(
 )
 ```
 
-**Response:**
+**Response (성공):**
 ```json
 {
+  "status": "success",
   "type_info": {
     "name": "org.springframework.core.SpringVersion",
     "kind": "class",
@@ -291,6 +434,8 @@ get_type_source(
   }
 }
 ```
+
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
 ### 6. list_methods
 클래스/인터페이스의 모든 메서드 목록 조회
@@ -324,6 +469,7 @@ list_methods(
 **Response (include_description=True):**
 ```json
 {
+  "status": "success",
   "type_name": "org.springframework.util.StringUtils",
   "type_kind": "class",
   "language": "java",
@@ -380,6 +526,8 @@ list_methods(
 }
 ```
 
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+
 ### 7. list_fields
 클래스/인터페이스의 모든 필드 목록 조회
 
@@ -408,6 +556,7 @@ list_fields(
 **Response (include_description=True):**
 ```json
 {
+  "status": "success",
   "type_name": "org.springframework.core.SpringVersion",
   "type_kind": "class",
   "pagination": {
@@ -462,6 +611,8 @@ list_fields(
 }
 ```
 
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+
 ### 8. get_import_section
 타입의 import 구문 소스 조회
 
@@ -478,6 +629,7 @@ get_import_section(
 **Response:**
 ```json
 {
+  "status": "success",
   "type_name": "org.springframework.core.SpringVersion",
   "import_section": {
     "line_range": {"start": 23, "end": 31},
@@ -485,6 +637,8 @@ get_import_section(
   }
 }
 ```
+
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
 ### 9. get_method_source
 메서드 구현 소스만 조회 (코드 분석용)
@@ -504,6 +658,7 @@ get_method_source(
 **Response:**
 ```json
 {
+  "status": "success",
   "method_source": [
     {
       "line_range": {"start": 156, "end": 159},
@@ -512,6 +667,8 @@ get_method_source(
   ]
 }
 ```
+
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
 ### 10. list_folder_tree
 JAR 내부 폴더 구조 조회
@@ -531,6 +688,7 @@ list_folder_tree(
 **Response (include_files=True):**
 ```json
 {
+  "status": "success",
   "path": "org/springframework/core",
   "max_depth": 3,
   "folders": [
@@ -585,6 +743,7 @@ list_folder_tree(
 **Response (include_files=False):**
 ```json
 {
+  "status": "success",
   "path": "org/springframework/core",
   "max_depth": 3,
   "folders": [
@@ -608,6 +767,8 @@ list_folder_tree(
 }
 ```
 
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+
 ### 11. search_file_names
 파일명 패턴 검색 (glob/regex 지원)
 
@@ -624,9 +785,10 @@ search_file_names(
 )
 ```
 
-**Response:**
+**Response (성공):**
 ```json
 {
+  "status": "success",
   "search_config": {
     "start_path": "org/springframework/util",
     "max_depth": 2,
@@ -651,6 +813,8 @@ search_file_names(
 }
 ```
 
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+
 ### 12. search_file_content
 파일 내용 기반 검색 (컨텍스트 라인 지원)
 
@@ -673,6 +837,7 @@ search_file_content(
 **Response:**
 ```json
 {
+  "status": "success",
   "search_config": {
     "query": "hasText",
     "query_type": "string",
@@ -704,6 +869,8 @@ search_file_content(
 }
 ```
 
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+
 ### 13. get_file
 파일 내용 조회 (라인 범위 지원)
 
@@ -722,6 +889,7 @@ get_file(
 **Response:**
 ```json
 {
+  "status": "success",
   "file_info": {
     "name": "StringUtils.java",
     "path": "org/springframework/util/StringUtils.java"
@@ -733,6 +901,8 @@ get_file(
   }
 }
 ```
+
+**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
 ## Claude Code 통합 워크플로
 
@@ -754,3 +924,49 @@ get_file(
 4. `get_file` → 특정 파일의 일부 또는 전체 조회
 
 모든 도구는 Maven 좌표 (group_id, artifact_id, version) 기반으로 동작하며, Claude Code가 라이브러리 소스를 효율적으로 탐색하고 분석할 수 있도록 설계되었습니다.
+
+---
+
+## 공통 응답 형식
+
+### Status 필드
+모든 MCP Tool 응답은 `status` 필드를 포함합니다:
+
+#### 탐색적 검색 및 메서드/필드 중심 분석 도구
+- `"success"`: 정상적으로 데이터를 반환했습니다
+- `"source_jar_not_found"`: 소스 JAR 파일을 찾을 수 없습니다
+- `"indexing_required"`: 소스 JAR은 있지만 인덱싱이 필요합니다
+
+#### 파일 기반 탐색 도구
+- `"success"`: 정상적으로 데이터를 반환했습니다  
+- `"source_jar_not_found"`: 소스 JAR 파일을 찾을 수 없습니다
+
+### 공통 에러 응답
+
+각 MCP Tool에서 발생할 수 있는 공통 에러 응답들입니다.
+
+#### 소스 JAR 없음
+```json
+{
+  "status": "source_jar_not_found",
+  "message": "해당 아티팩트의 소스를 찾을 수 없습니다. register_source 도구를 사용하여 소스를 등록해주세요.",
+  "suggested_action": "register_source"
+}
+```
+
+#### 인덱싱 필요 (탐색적 검색 및 메서드/필드 중심 분석 도구만)
+```json
+{
+  "status": "indexing_required", 
+  "message": "해당 아티팩트가 아직 인덱싱되지 않았습니다. index_artifact 도구를 사용하여 인덱싱을 수행해주세요.",
+  "suggested_action": "index_artifact"
+}
+```
+
+#### 내부 서버 에러
+```json
+{
+  "status": "internal_error",
+  "message": "내부 서버 에러가 발생했습니다: [상세 에러 메시지]"
+}
+```
