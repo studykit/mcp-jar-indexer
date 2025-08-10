@@ -118,18 +118,18 @@ register_source(
 ## TODO List
 
 ### Phase 1: 프로젝트 구조 및 기본 인프라
-- [ ] pyproject.toml 의존성 추가
-  - [ ] MCP 서버 프레임워크 추가
-  - [ ] GitPython 라이브러리 추가
-  - [ ] requests 라이브러리 추가
-  - [ ] 기타 필요한 파일 처리 라이브러리 추가
-- [ ] 기본 모듈 구조 생성
-  - [ ] `src/tools/` 디렉토리 생성
-  - [ ] `src/core/` 디렉토리 생성
-  - [ ] `src/utils/` 디렉토리 생성
-  - [ ] `src/tools/__init__.py` 생성
-  - [ ] `src/core/__init__.py` 생성
-  - [ ] `src/utils/__init__.py` 생성
+- [x] pyproject.toml 의존성 추가
+  - [x] MCP 서버 프레임워크 추가
+  - [x] GitPython 라이브러리 추가
+  - [x] requests 라이브러리 추가
+  - [x] 기타 필요한 파일 처리 라이브러리 추가
+- [x] 기본 모듈 구조 생성
+  - [x] `src/tools/` 디렉토리 생성
+  - [x] `src/core/` 디렉토리 생성
+  - [x] `src/utils/` 디렉토리 생성
+  - [x] `src/tools/__init__.py` 생성
+  - [x] `src/core/__init__.py` 생성
+  - [x] `src/utils/__init__.py` 생성
 
 ### Phase 2: 코어 기능 구현
 - [ ] `src/core/storage.py` 구현
