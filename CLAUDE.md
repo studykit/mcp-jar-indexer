@@ -6,8 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 JAR Indexer is an MCP (Model Context Protocol) server that enables Claude Code to access and analyze Java/Kotlin library source code by indexing JAR files and Git repositories. It provides 14 MCP tools for exploring external library implementations, method signatures, and package structures.
 
-For detailed project background, problem statement, and Claude Code integration scenarios, refer to `spec/01_overview.md`.
-
 ## Essential Development Commands
 
 ### Quick Start
@@ -22,36 +20,35 @@ uv run ruff check && uv run ruff format
 uv run python -m src.main
 ```
 
-For complete development command reference, consult Serena's `tech_stack` memory which contains comprehensive uv commands for testing, formatting, and dependency management.
+For complete development command reference, consult `guide/suggested_commands.md` which contains comprehensive uv commands for testing, formatting, and dependency management.
 
 ## When to Reference Documentation
 
 ### Specification Documents
-- **Project Understanding**: `spec/01_overview.md` - business context, problem definition, and use case scenarios
-- **System Design**: `spec/02_architecture.md` - component diagrams, data flow, and storage layout understanding
-- **Technology Decisions**: `spec/03_tech_stach.md` - supported environments, library choices, and version constraints
-- **MCP Tool Implementation**: `spec/04_mcp_tool_specification.md` - complete list of MCP tools to implement
-- **Implementation Details**: `spec/dev/` - specific tool specifications and development workflows
+- **Project Understanding**: `spec/01_overview.md` - Reference when you need business context, problem definition, and use case scenarios. Essential for understanding project goals and requirements.
+- **System Design**: `spec/02_architecture.md` - Reference when working with component interactions, storage paths, error handling flows, or understanding data flow between MCP tools and storage layers. Critical for structural changes and debugging.
+- **MCP Tool Implementation**: `spec/03_mcp_tool_specification.md` - Reference when implementing new MCP tools, understanding tool schemas, or checking complete tool requirements.
+- **Implementation Details**: `spec/dev/` - Reference for specific tool implementation patterns, development workflows, and detailed technical specifications.
 
 ### Guide Documents
-- **Code Standards**: `guide/code_style_guide.md` - formatting rules, type annotations, naming conventions, and best practices
-
-### Serena Memory Files
-For comprehensive project information during development, consult Serena's memory files:
-
-- **Codebase Structure**: `.serena/memories/codebase_structure.md` - complete directory layout, component organization, implementation status, and Maven coordinate patterns
-- **Technology Stack**: `.serena/memories/tech_stack.md` - dependencies, development commands, build configuration, and utility function details  
-- **Code Style Conventions**: `.serena/memories/code_style_conventions.md` - formatting standards, naming conventions, documentation requirements, and when to reference style guides
-
-**When to consult Serena memories:**
-- Understanding project architecture and current implementation status
-- Getting comprehensive lists of development commands and dependencies
-- Learning about file organization patterns and coding conventions
-- Planning new features or understanding existing component relationships
+- **Code Standards**: `guide/code_style_guide.md` - Reference when writing new code, implementing functions, or making code quality improvements. Essential for indentation standards (2-space rule), type annotation requirements (always explicit), naming conventions, docstring formatting, error handling patterns, and testing standards.
+- **Codebase Structure**: `guide/codebase.md` - Reference when navigating the project, adding new modules, understanding file organization, or determining where to place new functionality. Critical for understanding the clean architecture pattern, module responsibilities, and test structure organization.
+- **Task Completion Checklist**: `guide/task_completion_checklist.md` - Reference for the mandatory steps and best practices to follow when completing development tasks. Essential for ensuring code quality, testing coverage, and documentation completeness.
 
 ## Configuration Highlights
 
 Key project settings managed in configuration files:
-- Base storage: `~/.jar-indexer/` directory with Maven coordinate structure
 - Code style: 2-space indentation, explicit type annotations required  
 - Build system: uv package manager with hatchling backend
+
+## Technology Stack
+
+- **Python 3.12+**: Primary language
+- **uv**: Package manager and virtual environment
+- **hatchling**: Build backend
+- **aiohttp**: Async HTTP client
+- **mcp**: Model Context Protocol server framework
+- **requests**: HTTP library
+- **gitpython**: Git repository management
+- **pytest**: Testing framework
+- **ruff**: Code formatting and linting

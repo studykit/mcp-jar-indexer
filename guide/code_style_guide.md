@@ -11,27 +11,6 @@ This document defines the coding standards and style guidelines for the JAR Inde
 - **General**: 2 spaces for most file types (JSON, YAML, JS/TS, HTML/CSS)
 - **Exception**: Makefiles use tabs as required by Make
 
-```python
-# Good - 2 space indentation
-def example_function(param: str) -> None:
-  if param:
-    result = process_data(param)
-    return result
-  return None
-
-class ExampleClass:
-  def __init__(self, value: int) -> None:
-    self.value = value
-    
-  def method(self) -> str:
-    return f"Value: {self.value}"
-```
-
-**Configuration Sources:**
-- `.editorconfig`: `indent_size = 2`, `indent_style = space`
-- `pyproject.toml`: `[tool.ruff.format]` `indent-style = "space"`
-- Ruff enforces consistent indentation via formatting
-
 ## Type Annotations
 
 **ALWAYS use explicit type annotations for better IDE support and code clarity:**
@@ -76,27 +55,6 @@ When using `TypedDict` with optional fields (`total=False`), add type suppressio
 # pyright: reportTypedDictNotRequiredAccess=false
 ```
 
-## Import Organization
-
-Follow PEP 8 import ordering:
-1. Standard library imports
-2. Related third-party library imports
-3. Local application/library imports
-
-```python
-# Standard library
-import os
-from pathlib import Path
-from typing import Dict, List, Optional
-
-# Third-party
-import requests
-from mcp import types
-
-# Local imports
-from .storage import StorageManager
-from ..utils.validation import validate_maven_coordinates
-```
 
 ## Naming Conventions
 

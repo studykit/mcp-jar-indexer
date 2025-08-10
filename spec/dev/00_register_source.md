@@ -3,7 +3,6 @@
 ## 아키텍처 분석 요약
 - **스토리지 구조**: `~/.jar-indexer/` 하위에 `code/`, `source-jar/`, `git-bare/` 디렉토리
 - **Git 저장소 지원**: bare clone → worktree 생성 → 인덱싱 흐름
-- **현재 코드베이스**: 기본 skeleton만 존재 (`src/main.py`)
 
 ## 개발 단계별 계획
 
@@ -166,14 +165,14 @@ register_source(
   - [x] Git 예외 클래스 테스트 (35개 테스트 케이스)
 
 ### Phase 4: register_source MCP Tool
-- [ ] `src/tools/register_source.py` 구현
-  - [ ] MCP Tool 인터페이스 구현
-  - [ ] 파라미터 검증 로직
-  - [ ] 소스 타입별 처리 분기
-  - [ ] JAR 파일 처리 로직
-  - [ ] 로컬 디렉토리 처리 로직
-  - [ ] Git 저장소 처리 로직
-  - [ ] 롤백 메커니즘 구현
+- [x] `src/tools/register_source.py` 구현
+  - [x] MCP Tool 인터페이스 구현
+  - [x] 파라미터 검증 로직
+  - [x] 소스 타입별 처리 분기
+  - [x] JAR 파일 처리 로직
+  - [x] 로컬 디렉토리 처리 로직
+  - [x] Git 저장소 처리 로직
+  - [x] 롤백 메커니즘 구현
 
 ### Phase 5: 에러 처리 및 응답
 - [x] Git 관련 에러 클래스 정의 (`src/core/git_handler.py`에 구현됨)
@@ -182,15 +181,15 @@ register_source(
   - [x] `GitRefNotFoundError` 정의
   - [x] `GitAuthenticationError` 정의
   - [x] `GitWorktreeError` 정의
-- [ ] 기타 에러 클래스 정의
-  - [ ] `ResourceNotFoundError` 정의
-  - [ ] `DownloadFailedError` 정의
-  - [ ] `InvalidSourceError` 정의
-  - [ ] `UnsupportedSourceTypeError` 정의
-- [ ] 응답 형식 구현
-  - [ ] 성공 응답 (`registered_and_indexed`, `registered_only`)
-  - [ ] 에러 응답 (상세 메시지 및 해결 방법)
-  - [ ] JSON 스키마 검증
+- [x] 기타 에러 클래스 정의
+  - [x] `ResourceNotFoundError` 정의
+  - [x] `DownloadFailedError` 정의
+  - [x] `InvalidSourceError` 정의
+  - [x] `UnsupportedSourceTypeError` 정의
+- [x] 응답 형식 구현
+  - [x] 성공 응답 (`registered_and_indexed`, `registered_only`)
+  - [x] 에러 응답 (상세 메시지 및 해결 방법)
+  - [x] JSON 스키마 검증
 
 ### Phase 6: 통합 및 테스트
 - [ ] MCP 서버 통합

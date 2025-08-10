@@ -27,7 +27,6 @@ uv run pytest tests/core/ -v
 - Verify type hints are comprehensive
 - Check docstring completeness (Args, Returns, Raises)
 - Ensure error handling with descriptive messages
-- Follow Maven coordinate path patterns where applicable
 - Use appropriate access modifiers (private methods with `_` prefix)
 
 ### 4. Documentation Updates
