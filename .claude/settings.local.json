@@ -3,7 +3,8 @@
     "allow": [
       "Bash(uv run pytest:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(uv run ruff:*)"
+      "Bash(uv run ruff:*)",
+      "mcp__serena__replace_regex"
     ],
     "deny": []
   }
