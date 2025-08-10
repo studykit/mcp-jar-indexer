@@ -144,10 +144,10 @@ register_source(
   - [x] Maven 좌표 검증 (group_id, artifact_id, version)
   - [x] URI 형식 검증
   - [x] 파라미터 타입 검증
-- [ ] `src/utils/file_utils.py` 구현
-  - [ ] 파일 다운로드 유틸리티
-  - [ ] JAR 파일 검증
-  - [ ] 파일 복사/심볼릭 링크 생성
+- [x] `src/utils/file_utils.py` 구현
+  - [x] 파일 다운로드 유틸리티
+  - [x] JAR 파일 검증
+  - [x] 파일 복사/심볼릭 링크 생성
 
 ### Phase 3: Git 저장소 처리
 - [ ] `src/core/git_handler.py` 구현
@@ -166,7 +166,6 @@ register_source(
   - [ ] JAR 파일 처리 로직
   - [ ] 로컬 디렉토리 처리 로직
   - [ ] Git 저장소 처리 로직
-  - [ ] auto_index 기능 구현
   - [ ] 롤백 메커니즘 구현
 
 ### Phase 5: 에러 처리 및 응답

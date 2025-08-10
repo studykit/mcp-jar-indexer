@@ -1,0 +1,1 @@
+# pyright: reportTypedDictNotRequiredAccess=false
