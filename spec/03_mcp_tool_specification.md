@@ -1,47 +1,65 @@
-# JAR Indexer MCP Tools - Product Requirements Document
+# JAR Indexer MCP Tools Specification
 
-## 개요
-Java/Kotlin JAR 파일의 소스 코드를 인덱싱하고 Claude Code가 외부 라이브러리 소스를 효율적으로 탐색할 수 있게 하는 MCP 서버입니다.
+## Overview
+MCP server providing 14 tools to index and explore Java/Kotlin library source code from JAR files, directories, and Git repositories.
 
-제공하는 MCP Tool 목록을 다음과 같이 분류할 수 있습니다:
+## Tool Categories
 
-### 용도에 따른 분류
-**탐색적 검색:**
-- `list_packages`: 패키지 구조 트리 조회
-- `list_types`: 패키지별 타입(클래스/인터페이스) 목록
-- `get_type_source`: 타입 전체 소스코드 조회
+**Management (3 tools):**
+- `register_source` - Register JAR files, directories, or Git repositories
+- `index_artifact` - Index registered sources for exploration  
+- `list_indexed_artifacts` - List available indexed artifacts
 
-**메서드/필드 중심 분석:**
-- `list_methods`: 클래스/인터페이스의 모든 메서드 목록 조회 (필터링 지원)
-- `list_fields`: 클래스/인터페이스의 모든 필드 목록 조회 (필터링 지원)
-- `get_method_source`: 메서드 구현 소스만 조회 (코드 분석용)
-- `get_import_section`: 타입의 import 구문 소스 조회 (의존성 분석용)
+**Package/Type Exploration (3 tools):**
+- `list_packages` - Browse package structure hierarchy
+- `list_types` - List classes/interfaces in packages
+- `get_type_source` - Get complete source code for types
 
-**파일 기반 탐색:**
-- `list_folder_tree`: JAR 내부 폴더 구조 조회
-- `search_file_names`: 파일명 패턴 검색 (glob/regex)
-- `search_file_content`: 파일 내용 기반 검색
-- `get_file`: 특정 파일의 부분/전체 조회
+**Member Analysis (4 tools):**
+- `list_methods` - List methods with signatures and filtering
+- `list_fields` - List fields with signatures and filtering
+- `get_method_source` - Get method implementation source
+- `get_import_section` - Get import statements for dependency analysis
 
-**:관리 도구**
-- `register_source`: 소스 JAR 파일 또는 소스 디렉토리 직접 등록 (Git 저장소 지원)
-- `index_artifact`: 아티팩트 사전 인덱싱 (준비 작업용)
-- `list_indexed_artifacts`: 인덱싱된 아티팩트 목록 조회
+**File Operations (4 tools):**
+- `list_folder_tree` - Browse directory structure
+- `search_file_names` - Find files by name patterns (glob/regex)
+- `search_file_content` - Search content within files with context
+- `get_file` - Get file content with optional line ranges
 
-## MCP Tools Specification (14개)
+## Tool Specifications
 
+> **Note:** All tools may return common error responses. See "Common Response Status Codes" section for complete error details.
 
-### 0. register_source
-사용자가 직접 제공한 소스 JAR 파일 또는 소스 디렉토리를 시스템에 등록
+### Management Tools
 
-**사용 시나리오:**
-- Claude Code가 Maven/Gradle로 소스 JAR을 다운로드한 후 URI 전달
-- IDE에서 다운로드한 소스 JAR 파일 직접 등록
-- 수동으로 다운로드한 소스 JAR 파일 등록
-- 로컬에 압축 해제된 소스 디렉토리 등록
-- 개발 중인 라이브러리의 src 디렉토리 등록
-- GitHub/GitLab의 오픈소스 라이브러리 특정 버전 등록
-- 사내 Git 저장소의 특정 브랜치/태그 등록
+#### register_source
+Register JAR files, source directories, or Git repositories for indexing.
+
+Supports local/remote JAR files (Maven repositories, file system), local source directories (extracted sources, project directories), and Git repositories (GitHub, GitLab, internal servers with HTTPS/SSH).
+
+**Examples:**
+```
+# JAR Files
+file:///path/to/library-sources.jar
+https://repo1.maven.org/maven2/org/example/lib/1.0.0/lib-1.0.0-sources.jar
+
+# Local Directories  
+file:///Users/user/project/src/main/java
+file:///tmp/extracted-sources
+
+# Git Repositories
+https://github.com/user/repo.git
+git@github.com:user/repo.git
+https://gitlab.com/user/project.git
+```
+
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `source_uri` - Source location URI (required)
+- `auto_index` - Auto-index after registration (optional, default: true)
+- `git_ref` - Git branch/tag/commit (required for Git URIs only, not applicable to JAR files or directories)
+
 
 **Request:**
 ```python
@@ -50,107 +68,28 @@ register_source(
     artifact_id: "spring-core",
     version: "5.3.21",
     source_uri: "https://github.com/spring-projects/spring-framework.git",
-    auto_index: True,  # 선택사항, 기본값: True (등록 후 자동 인덱싱 여부)
-    git_ref: "v5.3.21"  # 선택사항, 단, Git URI인 경우 태그/브랜치/커밋 SHA 지정 필수
+    auto_index: True,
+    git_ref: "v5.3.21"
 )
 ```
 
-**source_uri 형태:**
-
-### JAR 파일
-- **로컬 JAR (절대 경로)**: `file:///Users/user/.m2/repository/org/springframework/spring-core/5.3.21/spring-core-5.3.21-sources.jar`
-- **로컬 JAR (상대 경로)**: `file://./lib/spring-core-5.3.21-sources.jar`
-- **원격 JAR (Maven Central)**: `https://repo1.maven.org/maven2/org/springframework/spring-core/5.3.21/spring-core-5.3.21-sources.jar`
-- **원격 JAR (사내 저장소)**: `https://nexus.company.com/repository/maven-public/org/springframework/spring-core/5.3.21/spring-core-5.3.21-sources.jar`
-
-### 로컬 디렉토리
-- **소스 디렉토리**: `file:///Users/user/projects/spring-framework/spring-core/src/main/java`
-- **프로젝트 루트**: `file:///Users/user/projects/my-library/src`
-- **압축 해제된 소스**: `file:///tmp/spring-core-5.3.21-sources`
-- **로컬 Git 저장소**: `file:///Users/user/projects/my-git-repo` (Git 저장소인 경우 git_ref 파라미터 사용 필수)
-
-### Git 저장소
-- **GitHub 공개 저장소 (HTTPS)**: `https://github.com/spring-projects/spring-framework.git`
-- **GitHub 사설 저장소 (HTTPS)**: `https://github.com/company/private-lib.git`
-- **GitHub SSH 접근**: `git@github.com:spring-projects/spring-framework`
-- **GitLab HTTPS**: `https://gitlab.com/user/project.git`
-- **GitLab SSH**: `git@gitlab.com:user/project`
-- **사내 Git 서버**: `https://git.company.com/team/library.git`
-
-**git_ref 파라미터 (Git URI인 경우):**
-- **태그**: `"v5.3.21"`, `"1.0.0"`, `"release-2023.12"`
-- **브랜치**: `"main"`, `"develop"`, `"feature/new-api"`  
-- **커밋 SHA**: `"a1b2c3d4e5f6"`
-- **생략시 기본값**: `"main"` 또는 저장소 기본 브랜치
-
-**Response (auto_index=True, 기본값):**
-```json
+**Response:**
+```jsonc
 {
   "group_id": "org.springframework",
   "artifact_id": "spring-core", 
   "version": "5.3.21",
-  "status": "registered_and_indexed",
-  "indexed": true
+  "status": "registered_and_indexed", // "registered_only" when auto_index=false
+  "indexed": true // false when auto_index=false
 }
 ```
 
-**Response (auto_index=False):**
-```json
-{
-  "group_id": "org.springframework",
-  "artifact_id": "spring-core",
-  "version": "5.3.21",
-  "status": "registered_only",
-  "indexed": false,
-  "message": "소스가 등록되었습니다. index_artifact 도구로 인덱싱을 수행하세요."
-}
-```
 
-**Error Response:**
-```json
-{
-  "status": "resource_not_found", 
-  "message": "소스를 찾을 수 없습니다: file:///invalid/path/spring-core-5.3.21-sources.jar"
-}
-```
+#### index_artifact
+Index a registered artifact to enable exploration tools.
 
-```json
-{
-  "status": "download_failed",
-  "message": "원격 소스 다운로드 실패: https://invalid-url.com/spring-core-5.3.21-sources.jar"
-}
-```
-
-```json
-{
-  "status": "invalid_source",
-  "message": "유효하지 않은 소스입니다: file:///path/to/corrupted.jar"
-}
-```
-
-```json
-{
-  "status": "unsupported_source_type", 
-  "message": "지원하지 않는 소스 형태입니다. JAR 파일, Java/Kotlin 소스 디렉토리, 또는 Git 저장소만 지원됩니다."
-}
-```
-
-```json
-{
-  "status": "git_clone_failed",
-  "message": "Git 저장소 복제 실패: git+https://github.com/user/repo.git (권한 없음 또는 저장소 없음)"
-}
-```
-
-```json
-{
-  "status": "git_ref_not_found",
-  "message": "Git 참조를 찾을 수 없습니다: v1.0.0 (태그/브랜치/커밋이 존재하지 않음)"
-}
-```
-
-### 1. index_artifact
-아티팩트 전체 인덱싱 (사전 준비용)
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
 
 **Request:**
 ```python
@@ -161,7 +100,7 @@ index_artifact(
 )
 ```
 
-**Response (성공):**
+**Response (success):**
 ```json
 {
   "status": "success",
@@ -170,31 +109,27 @@ index_artifact(
 }
 ```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
-### 2. list_indexed_artifacts
-인덱싱된 아티팩트 목록 조회
+#### list_indexed_artifacts
+List all indexed artifacts with optional filtering and pagination.
+
+**Parameters:**
+- `page`, `page_size` - Pagination controls (optional)
+- `group_filter`, `artifact_filter` - Filter by coordinates (optional)
+- `version_filter` - Version constraints: `"5.3.21"`, `">=5.3.0"`, `"<6.0.0"`, `">=5.0.0,<6.0.0"` (optional)
 
 **Request:**
 ```python
 list_indexed_artifacts(
-    page: 1,  # 선택사항, 기본값: 1
-    page_size: 50,  # 선택사항, 기본값: 50
-    group_filter: "org.springframework",  # 선택사항, 그룹별 필터링
-    artifact_filter: "spring-core",  # 선택사항, 아티팩트별 필터링
-    version_filter: ">=5.3.0"  # 선택사항, 버전 비교 필터링
+    page: 1,
+    page_size: 50,
+    group_filter: "org.springframework",
+    artifact_filter: "spring-core",
+    version_filter: ">=5.3.0"
 )
 ```
 
-**Version Filter 지원 연산자:**
-- `"5.3.21"` - 정확히 해당 버전
-- `">=5.3.0"` - 5.3.0 이상
-- `">5.2.0"` - 5.2.0 초과
-- `"<=5.3.21"` - 5.3.21 이하
-- `"<6.0.0"` - 6.0.0 미만
-- `">=5.0.0,<6.0.0"` - 범위 지정 (5.0.0 이상 6.0.0 미만)
-
-**Response (성공):**
+**Response (success):**
 ```json
 {
   "status": "success",
@@ -211,18 +146,6 @@ list_indexed_artifacts(
       "status": "indexed"
     },
     {
-      "group_id": "org.springframework", 
-      "artifact_id": "spring-context",
-      "version": "5.3.21",
-      "status": "indexed"
-    },
-    {
-      "group_id": "com.fasterxml.jackson.core",
-      "artifact_id": "jackson-core", 
-      "version": "2.13.3",
-      "status": "indexed"
-    },
-    {
       "group_id": "io.netty",
       "artifact_id": "netty-common",
       "version": "4.1.79.Final",
@@ -232,10 +155,17 @@ list_indexed_artifacts(
 }
 ```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
-### 3. list_packages
-패키지 구조 탐색
+### Package/Type Exploration Tools
+
+#### list_packages
+Browse package structure hierarchy within an artifact.
+
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `parent_package` - Starting package path (optional, defaults to root)
+- `max_depth` - Hierarchy depth to traverse (optional, default: 1)
+- `include_description` - Include package descriptions (optional, default: false)
 
 **Request:**
 ```python
@@ -243,48 +173,39 @@ list_packages(
     group_id: "org.springframework",
     artifact_id: "spring-core",
     version: "5.3.21",
-    parent_package: "org.springframework.core",  # 선택사항: 시작점 패키지 경로
-    max_depth: 2,  # 선택사항, 기본값: 1 (현재 레벨만)
-    include_description: True  # 선택사항, 기본값: False (패키지 설명 포함 여부)
+    parent_package: "org.springframework.core",
+    max_depth: 2,
+    include_description: True
 )
 ```
 
-**parent_package 파라미터:**
-- `None` 또는 생략: 루트부터 모든 패키지 조회
-- `"org.springframework"`: 해당 패키지부터 시작하여 하위 패키지만 조회
-- `"org.springframework.core"`: core 패키지 하위의 서브패키지들만 조회
-
-**예시:**
-- `parent_package=None` → `org.springframework`, `org.springframework.core`, `org.springframework.util` 등 전체
-- `parent_package="org.springframework.core"` → `annotation`, `convert`, `io` 등 core 하위만
-
-**Response (include_description=True):**
-```json
+**Response:**
+```jsonc
 {
   "status": "success",
   "max_depth": 2,
   "packages": [
     {
       "name": "org.springframework.core",
-      "description": "Spring's core conversion system...",
+      "description": "Related description", // Only present when include_description=true
       "packages": [
         {
           "name": "annotation",
-          "description": "Annotation support utilities and meta-annotations for Spring components",
+          "description": "Related description", // Only present when include_description=true
           "packages": [
             {
               "name": "meta",
-              "description": "Meta-annotation support for creating composed annotations"
+              "description": "Related description" // Only present when include_description=true
             }
           ]
         },
         {
           "name": "convert",
-          "description": "Type conversion system for Spring framework",
+          "description": "Related description", // Only present when include_description=true
           "packages": [
             {
               "name": "converter",
-              "description": "Built-in converter implementations"
+              "description": "Related description" // Only present when include_description=true
             }
           ]
         }
@@ -294,41 +215,17 @@ list_packages(
 }
 ```
 
-**Response (include_description=False, 기본값):**
-```json
-{
-  "status": "success",
-  "max_depth": 2,
-  "packages": [
-    {
-      "name": "org.springframework.core",
-      "packages": [
-        {
-          "name": "annotation",
-          "packages": [
-            {
-              "name": "meta"
-            }
-          ]
-        },
-        {
-          "name": "convert",
-          "packages": [
-            {
-              "name": "converter"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+#### list_types
+List classes, interfaces, enums, and annotations within packages.
 
-### 4. list_types
-패키지별 타입 목록 조회 (클래스, 인터페이스, 열거형, 어노테이션 등)
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `package_filter` - Target package (optional)
+- `name_filter` - Type name pattern: `"*Utils"`, `"String*"`, `"*Exception*"` (optional)
+- `name_filter_type` - Pattern type: "glob" or "regex" (optional, default: "glob")
+- `page`, `page_size` - Pagination controls (optional)
+- `include_description` - Include type descriptions (optional, default: false)
 
 **Request:**
 ```python
@@ -336,26 +233,17 @@ list_types(
     group_id: "org.springframework",
     artifact_id: "spring-core", 
     version: "5.3.21",
-    package_filter: "org.springframework.core",  # 선택사항
-    name_filter: "*Utils",  # 선택사항, 타입 이름 패턴 필터링
-    name_filter_type: "glob",  # 선택사항, "glob" | "regex", 기본값: "glob"
-    page: 1,  # 선택사항, 기본값: 1
-    page_size: 50,  # 선택사항, 기본값: 50
-    include_description: True  # 선택사항, 기본값: False (타입 설명 포함 여부)
+    package_filter: "org.springframework.core",
+    name_filter: "*Utils",
+    name_filter_type: "glob",
+    page: 1,
+    page_size: 50,
+    include_description: True
 )
 ```
 
-**name_filter 예시:**
-- **glob 패턴**:
-  - `"*Utils"` - Utils로 끝나는 모든 타입
-  - `"String*"` - String으로 시작하는 모든 타입
-  - `"*Exception*"` - Exception이 포함된 모든 타입
-- **regex 패턴**:
-  - `"^[A-Z][a-z]+Utils$"` - 대문자로 시작하고 Utils로 끝나는 타입
-  - `".*Annotation.*"` - Annotation이 포함된 타입
-
-**Response (include_description=True):**
-```json
+**Response:**
+```jsonc
 {
   "status": "success",
   "package": "org.springframework.core",
@@ -369,58 +257,25 @@ list_types(
       "name": "AttributeAccessor",
       "kind": "interface",
       "language": "java",
-      "description": "Interface defining a generic contract for attaching and accessing metadata to/from arbitrary objects."
+      "description": "Related description." // Only present when include_description=true
     },
     {
       "name": "AttributeAccessorSupport",
       "kind": "class", 
       "language": "java",
-      "description": "Support class for AttributeAccessor implementations, providing a base implementation of all methods."
-    },
-    {
-      "name": "NestedIOException", 
-      "kind": "class",
-      "language": "java",
-      "description": "Subclass of IOException that properly handles a root cause, exposing the root cause just like NestedCheckedException does."
+      "description": "Related description." // Only present when include_description=true
     }
   ]
 }
 ```
 
-**Response (성공, include_description=False, 기본값):**
-```json
-{
-  "status": "success",
-  "package": "org.springframework.core",
-  "pagination": {
-    "page": 1,
-    "total_count": 247,
-    "total_pages": 5,
-  },
-  "types": [
-    {
-      "name": "AttributeAccessor",
-      "kind": "interface",
-      "language": "java"
-    },
-    {
-      "name": "AttributeAccessorSupport",
-      "kind": "class", 
-      "language": "java"
-    },
-    {
-      "name": "NestedIOException", 
-      "kind": "class",
-      "language": "java"
-    }
-  ]
-}
-```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+#### get_type_source
+Get complete source code for a specific type.
 
-### 5. get_type_source
-타입 전체 소스 조회
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `type_name` - Fully qualified type name (required)
 
 **Request:**
 ```python
@@ -432,7 +287,7 @@ get_type_source(
 )
 ```
 
-**Response (성공):**
+**Response (success):**
 ```json
 {
   "status": "success",
@@ -441,15 +296,25 @@ get_type_source(
     "kind": "class",
     "language": "java",
     "line_range": {"start": 25, "end": 95},
-    "source_code": "package org.springframework.core;\n\n/**\n * Class that exposes the Spring version. Fetches the Implementation-Version manifest attribute from the jar file.\n */\npublic class SpringVersion {\n\n    private static final String VERSION = getImplementationVersion();\n\n    public static String getVersion() {\n        return VERSION;\n    }\n\n    static class StaticNestedClass {\n        // nested class implementation\n    }\n\n    private static String getImplementationVersion() {\n        // implementation details\n    }\n}"
+    "source_code": "Source code content..."
   }
 }
 ```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
-### 6. list_methods
-클래스/인터페이스의 모든 메서드 목록 조회
+### Member Analysis Tools
+
+#### list_methods
+List all methods of a class or interface with filtering support.
+
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `type_name` - Fully qualified type name (required)
+- `include_inherited` - Include inherited methods (optional, default: false)
+- `name_filter` - Method name pattern: `"get*"`, `"set*"`, `"*Test"`, `"is*"` (optional)
+- `name_filter_type` - Pattern type: "glob" or "regex" (optional, default: "glob")
+- `page`, `page_size` - Pagination controls (optional)
+- `include_description` - Include method descriptions (optional, default: false)
 
 **Request:**
 ```python
@@ -458,27 +323,17 @@ list_methods(
     artifact_id: "spring-core", 
     version: "5.3.21",
     type_name: "org.springframework.util.StringUtils",
-    include_inherited: False,  # 선택사항, 상속된 메서드 포함 여부
-    name_filter: "has*",  # 선택사항, 메서드 이름 패턴 필터링
-    name_filter_type: "glob",  # 선택사항, "glob" | "regex", 기본값: "glob"
-    page: 1,  # 선택사항, 기본값: 1
-    page_size: 50,  # 선택사항, 기본값: 50
-    include_description: True  # 선택사항, 기본값: False (메서드 설명 포함 여부)
+    include_inherited: False,
+    name_filter: "has*",
+    name_filter_type: "glob",
+    page: 1,
+    page_size: 50,
+    include_description: True
 )
 ```
 
-**name_filter 예시:**
-- **glob 패턴**:
-  - `"get*"` - get으로 시작하는 모든 메서드 (getter 메서드)
-  - `"set*"` - set으로 시작하는 모든 메서드 (setter 메서드)
-  - `"*Test"` - Test로 끝나는 모든 메서드 (테스트 메서드)
-  - `"is*"` - is로 시작하는 모든 메서드 (boolean 반환 메서드)
-- **regex 패턴**:
-  - `"^(get|set)[A-Z].*"` - getter/setter 메서드만
-  - `".*Builder$"` - Builder로 끝나는 메서드
-
-**Response (include_description=True):**
-```json
+**Response:**
+```jsonc
 {
   "status": "success",
   "type_name": "org.springframework.util.StringUtils",
@@ -493,54 +348,29 @@ list_methods(
     {
       "signature": "public static boolean hasText(String str)",
       "line_range": {"start": 156, "end": 159},
-      "description": "Check whether the given String contains actual text."
+      "description": "Related description." // Only present when include_description=true
     },
     {
       "signature": "public static boolean hasText(CharSequence str)",
       "line_range": {"start": 171, "end": 174},
-      "description": "Check whether the given CharSequence contains actual text."
-    },
-    {
-      "signature": "public static boolean hasLength(String str)",
-      "line_range": {"start": 189, "end": 192},
-      "description": "Check whether the given String has actual length."
+      "description": "Related description." // Only present when include_description=true
     }
   ]
 }
 ```
 
-**Response (include_description=False, 기본값):**
-```json
-{
-  "type_name": "org.springframework.util.StringUtils",
-  "type_kind": "class",
-  "language": "java",
-  "pagination": {
-    "page": 1,
-    "total_count": 45,
-    "total_pages": 1
-  },
-  "methods": [
-    {
-      "signature": "public static boolean hasText(String str)",
-      "line_range": {"start": 156, "end": 159}
-    },
-    {
-      "signature": "public static boolean hasText(CharSequence str)",
-      "line_range": {"start": 171, "end": 174}
-    },
-    {
-      "signature": "public static boolean hasLength(String str)",
-      "line_range": {"start": 189, "end": 192}
-    }
-  ]
-}
-```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+#### list_fields
+List all fields of a class or interface with filtering support.
 
-### 7. list_fields
-클래스/인터페이스의 모든 필드 목록 조회
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `type_name` - Fully qualified type name (required)
+- `include_inherited` - Include inherited fields (optional, default: false)
+- `name_filter` - Field name pattern: `"*VERSION*"`, `"*CONFIG*"`, `"cache*"`, `"logger"` (optional)
+- `name_filter_type` - Pattern type: "glob" or "regex" (optional, default: "glob")
+- `page`, `page_size` - Pagination controls (optional)
+- `include_description` - Include field descriptions (optional, default: false)
 
 **Request:**
 ```python
@@ -549,23 +379,17 @@ list_fields(
     artifact_id: "spring-core", 
     version: "5.3.21",
     type_name: "org.springframework.core.SpringVersion",
-    include_inherited: False,  # 선택사항, 상속된 필드 포함 여부
-    name_filter: "*VERSION*",  # 선택사항, 필드 이름 패턴 필터링
-    name_filter_type: "glob",  # 선택사항, "glob" | "regex", 기본값: "glob"
-    page: 1,  # 선택사항, 기본값: 1
-    page_size: 50,  # 선택사항, 기본값: 50
-    include_description: True  # 선택사항, 기본값: False (필드 설명 포함 여부)
+    include_inherited: False,
+    name_filter: "*VERSION*",
+    name_filter_type: "glob",
+    page: 1,
+    page_size: 50,
+    include_description: True
 )
 ```
 
-**name_filter 예시:**
-- **상수 필드**: `"*VERSION*"`, `"*CONSTANT*"`
-- **설정 필드**: `"*CONFIG*"`, `"*SETTING*"`
-- **캐시 필드**: `"*CACHE*"`, `"cache*"`
-- **로거 필드**: `"*LOG*"`, `"logger"`
-
-**Response (include_description=True):**
-```json
+**Response:**
+```jsonc
 {
   "status": "success",
   "type_name": "org.springframework.core.SpringVersion",
@@ -579,53 +403,24 @@ list_fields(
     {
       "signature": "private static final String VERSION",
       "line_range": {"start": 28, "end": 28},
-      "description": "The Spring version string cached at class loading time."
+      "description": "Related description." // Only present when include_description=true
     },
     {
       "signature": "private static final Logger logger",
       "line_range": {"start": 32, "end": 32},
-      "description": "Logger for SpringVersion class."
-    },
-    {
-      "signature": "public static final int MAJOR_VERSION",
-      "line_range": {"start": 35, "end": 35},
-      "description": "The major version number of Spring framework."
+      "description": "Related description." // Only present when include_description=true
     }
   ]
 }
 ```
 
-**Response (include_description=False, 기본값):**
-```json
-{
-  "type_name": "org.springframework.core.SpringVersion",
-  "type_kind": "class",
-  "pagination": {
-    "page": 1,
-    "total_count": 5,
-    "total_pages": 1
-  },
-  "fields": [
-    {
-      "signature": "private static final String VERSION",
-      "line_range": {"start": 28, "end": 28}
-    },
-    {
-      "signature": "private static final Logger logger",
-      "line_range": {"start": 32, "end": 32}
-    },
-    {
-      "signature": "public static final int MAJOR_VERSION",
-      "line_range": {"start": 35, "end": 35}
-    }
-  ]
-}
-```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+#### get_import_section
+Get import statements for a type to analyze dependencies.
 
-### 8. get_import_section
-타입의 import 구문 소스 조회
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `type_name` - Fully qualified type name (required)
 
 **Request:**
 ```python
@@ -644,15 +439,20 @@ get_import_section(
   "type_name": "org.springframework.core.SpringVersion",
   "import_section": {
     "line_range": {"start": 23, "end": 31},
-    "source_code": "import java.util.Properties;\nimport java.util.jar.Attributes;\nimport java.util.jar.Manifest;\nimport org.springframework.util.StringUtils;\nimport org.springframework.core.io.ClassPathResource;\nimport org.springframework.lang.Nullable;\n\nimport static org.springframework.util.Assert.notNull;\nimport static java.util.Objects.requireNonNull;"
+    "source_code": "Import statements..."
   }
 }
 ```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
-### 9. get_method_source
-메서드 구현 소스만 조회 (코드 분석용)
+#### get_method_source
+Get source code for specific method implementations.
+
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `type_name` - Fully qualified type name (required)
+- `method_name` - Method name (required)
+- `method_signature` - Method parameter signature for overload disambiguation (optional)
 
 **Request:**
 ```python
@@ -662,7 +462,7 @@ get_method_source(
     version: "5.3.21",
     type_name: "org.springframework.util.StringUtils",
     method_name: "hasText",
-    method_signature: "(String)"  # 선택사항
+    method_signature: "(String)"
 )
 ```
 
@@ -673,16 +473,23 @@ get_method_source(
   "method_source": [
     {
       "line_range": {"start": 156, "end": 159},
-      "source_code": "public static boolean hasText(String str) {\n    return (str != null && !str.trim().isEmpty());\n}"
+      "source_code": "Method implementation..."
     }
   ]
 }
 ```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
-### 10. list_folder_tree
-JAR 내부 폴더 구조 조회
+### File Operations Tools
+
+#### list_folder_tree
+Browse directory structure within an artifact.
+
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `path` - Starting directory path (optional, defaults to root)
+- `include_files` - Include files in response (optional, default: true)
+- `max_depth` - Directory traversal depth (optional, default: 1)
 
 **Request:**
 ```python
@@ -690,14 +497,14 @@ list_folder_tree(
     group_id: "org.springframework",
     artifact_id: "spring-core",
     version: "5.3.21",
-    path: "org/springframework/core",  # 선택사항, 없으면 루트
-    include_files: True,  # True: 폴더+파일, False: 폴더만
-    max_depth: 3  # 선택사항, 기본값: 1 (현재 폴더만)
+    path: "org/springframework/core",
+    include_files: True,
+    max_depth: 3
 )
 ```
 
-**Response (include_files=True):**
-```json
+**Response:**
+```jsonc
 {
   "status": "success",
   "path": "org/springframework/core",
@@ -706,82 +513,30 @@ list_folder_tree(
     {
       "name": "annotation",
       "file_count": 8,
-      "files": [
-        {
-          "name": "AnnotationUtils.java",
-          "size": "12.5KB",
-          "line_count": 345
-        }
-      ],
+      "files": [{"name": "File.java", "size": "1KB", "line_count": 50}], // Only present when include_files=true
       "folders": [
         {
           "name": "meta",
           "file_count": 5,
-          "files": [
-            {
-              "name": "AnnotationMetadata.java",
-              "size": "3.1KB",
-              "line_count": 89
-            }
-          ],
-          "folders": [
-            {
-              "name": "impl",
-              "file_count": 3,
-              "files": [
-                {
-                  "name": "StandardAnnotationMetadata.java",
-                  "size": "4.7KB",
-                  "line_count": 134
-                }
-              ]
-            }
-          ]
+          "folders": [{"name": "impl", "file_count": 3}]
         }
       ]
     }
   ],
-  "files": [
-    {
-      "name": "SpringVersion.java",
-      "size": "2.1KB",
-      "line_count": 67
-    }
-  ]
+  "files": [{"name": "File.java", "size": "1KB", "line_count": 50}] // Only present when include_files=true
 }
 ```
 
-**Response (include_files=False):**
-```json
-{
-  "status": "success",
-  "path": "org/springframework/core",
-  "max_depth": 3,
-  "folders": [
-    {
-      "name": "annotation",
-      "file_count": 8,
-      "folders": [
-        {
-          "name": "meta",
-          "file_count": 5,
-          "folders": [
-            {
-              "name": "impl",
-              "file_count": 3
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
+#### search_file_names
+Find files by name patterns using glob or regex matching.
 
-### 11. search_file_names
-파일명 패턴 검색 (glob/regex 지원)
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `pattern` - Search pattern (required)
+- `pattern_type` - Pattern type: "glob" or "regex" (required)
+- `start_path` - Starting directory (optional, defaults to root)
+- `max_depth` - Search depth limit (optional, default: unlimited)
 
 **Request:**
 ```python
@@ -789,14 +544,14 @@ search_file_names(
     group_id: "org.springframework",
     artifact_id: "spring-core",
     version: "5.3.21",
-    pattern: "StringUtils*.java",  # glob 또는 regex 패턴
-    pattern_type: "glob",  # "glob" | "regex"
-    start_path: "org/springframework/util",  # 선택사항, 기본값: 루트
-    max_depth: 2  # 선택사항, 기본값: 무제한(-1)
+    pattern: "StringUtils*.java",
+    pattern_type: "glob",
+    start_path: "org/springframework/util",
+    max_depth: 2
 )
 ```
 
-**Response (성공):**
+**Response (success):**
 ```json
 {
   "status": "success",
@@ -807,27 +562,28 @@ search_file_names(
   },
   "files": [
     {
-      "name": "StringUtils.java",
-      "path": "org/springframework/util/StringUtils.java",
-      "size": "15.2KB",
-      "line_count": 456,
+      "name": "File.java",
+      "path": "path/to/File.java",
+      "size": "1KB",
+      "line_count": 50,
       "depth": 0
-    },
-    {
-      "name": "StringUtilsHelper.java",
-      "path": "org/springframework/util/concurrent/StringUtilsHelper.java", 
-      "size": "3.1KB",
-      "line_count": 89,
-      "depth": 1
     }
   ]
 }
 ```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
-### 12. search_file_content
-파일 내용 기반 검색 (컨텍스트 라인 지원)
+#### search_file_content
+Search for text within file contents with configurable context lines.
+
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `query` - Search query (required)
+- `query_type` - Query type: "string" or "regex" (required)
+- `start_path` - Starting directory (optional, defaults to root)
+- `max_depth` - Search depth limit (optional, default: unlimited)
+- `context_before`, `context_after` - Context lines around matches (optional)
+- `max_results` - Maximum number of results (optional)
 
 **Request:**
 ```python
@@ -835,13 +591,13 @@ search_file_content(
     group_id: "org.springframework",
     artifact_id: "spring-core",
     version: "5.3.21",
-    query: "hasText",  # 검색 쿼리
-    query_type: "string",  # "string" | "regex"
-    start_path: "org/springframework/util",  # 선택사항, 기본값: 루트
-    max_depth: 2,  # 선택사항, 기본값: 무제한(-1)
-    context_before: 2,  # 선택사항, 매칭 라인 위로 N줄
-    context_after: 3,   # 선택사항, 매칭 라인 아래로 N줄
-    max_results: 20  # 선택사항
+    query: "hasText",
+    query_type: "string",
+    start_path: "org/springframework/util",
+    max_depth: 2,
+    context_before: 2,
+    context_after: 3,
+    max_results: 20
 )
 ```
 
@@ -857,33 +613,25 @@ search_file_content(
     "context_after": 3
   },
   "matches": {
-    "StringUtils.java": [
+    "File.java": [
       {
-        "content": "    /**\n     * Check whether the given String contains actual text.\n     */\n    public static boolean hasText(String str) {\n        return (str != null && !str.trim().isEmpty());\n    }\n",
-        "content_range": "154-159",
-        "match_lines": "156"
-      },
-      {
-        "content": "    /**\n     * Another method documentation.\n     * @see #hasText(String)\n     */\n    public static boolean hasLength(String str) {\n        return (str != null && !str.isEmpty());\n    }",
-        "content_range": "201-207",
-        "match_lines": "203"
-      }
-    ],
-    "concurrent/ConcurrentStringUtils.java": [
-      {
-        "content": "    // Uses StringUtils.hasText internally\n    public void process() {\n        if (hasText(input)) { ... }\n    }",
-        "content_range": "45-49",
-        "match_lines": "47"
+        "content": "Matched content...",
+        "content_range": "10-15",
+        "match_lines": "12"
       }
     ]
   }
 }
 ```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
-### 13. get_file
-파일 내용 조회 (라인 범위 지원)
+#### get_file
+Get file content with optional line range specification.
+
+**Parameters:**
+- `group_id`, `artifact_id`, `version` - Maven coordinates (required)
+- `file_path` - File path within artifact (required)
+- `start_line`, `end_line` - Line range to retrieve (optional, defaults to entire file)
 
 **Request:**
 ```python
@@ -892,8 +640,8 @@ get_file(
     artifact_id: "spring-core",
     version: "5.3.21",
     file_path: "org/springframework/util/StringUtils.java",
-    start_line: 150,  # 선택사항
-    end_line: 200     # 선택사항
+    start_line: 150,
+    end_line: 200
 )
 ```
 
@@ -902,82 +650,58 @@ get_file(
 {
   "status": "success",
   "file_info": {
-    "name": "StringUtils.java",
-    "path": "org/springframework/util/StringUtils.java"
+    "name": "File.java",
+    "path": "path/to/File.java"
   },
   "content": {
     "start_line": 150,
     "end_line": 200,
-    "source_code": "    /**\n     * Check whether the given String contains actual text.\n     */\n    public static boolean hasText(String str) {\n        return (str != null && !str.trim().isEmpty());\n    }\n\n    /**\n     * Check whether the given String has length.\n     */\n    public static boolean hasLength(String str) {\n        return (str != null && !str.isEmpty());\n    }"
+    "source_code": "File content..."
   }
 }
 ```
 
-**에러 응답:** 하단 "공통 에러 응답" 섹션 참조
 
-## Claude Code 통합 워크플로
+## Common Usage Workflows
 
-### 탐색적 검색
-1. `list_packages` → 패키지 구조 파악
-2. `list_types` → 특정 패키지의 타입들 확인
-3. `get_type_source` → 전체 타입 소스 조회
+**Setup Workflow:**
+1. `register_source` - Register JAR/directory/Git repository
+2. `index_artifact` - Index the source (if auto_index=false)
+3. `list_indexed_artifacts` - Verify indexing completed
 
-### 메서드/필드 중심 분석
-1. `list_methods` → 메서드 목록 및 시그니처 확인
-2. `list_fields` → 필드 목록 및 시그니처 확인
-3. `get_method_source` → 메서드 구현 코드 분석
-4. `get_import_section` → import 의존성 분석
-
-### 파일 기반 탐색
-1. `list_folder_tree` → 디렉토리 구조 파악
-2. `search_file_names` → 파일명 패턴 검색
-3. `search_file_content` → 파일 내용 문자열 검색
-4. `get_file` → 특정 파일의 일부 또는 전체 조회
-
-모든 도구는 Maven 좌표 (group_id, artifact_id, version) 기반으로 동작하며, Claude Code가 라이브러리 소스를 효율적으로 탐색하고 분석할 수 있도록 설계되었습니다.
+**Code Exploration Workflows:**
+- **Package Structure**: `list_packages` → `list_types` → `get_type_source`
+- **Method Analysis**: `list_methods` → `get_method_source` → `get_import_section`  
+- **File Operations**: `list_folder_tree` → `search_file_names` → `get_file`
+- **Content Search**: `search_file_content` with context lines
 
 ---
 
-## 공통 응답 형식
+## Common Response Status Codes
 
-### Status 필드
-모든 MCP Tool 응답은 `status` 필드를 포함합니다:
+**Success States:**
+- `"success"` - Operation completed successfully
+- `"registered_and_indexed"` - Source registered and indexed
+- `"registered_only"` - Source registered but not indexed
 
-#### 탐색적 검색 및 메서드/필드 중심 분석 도구
-- `"success"`: 정상적으로 데이터를 반환했습니다
-- `"source_jar_not_found"`: 소스 JAR 파일을 찾을 수 없습니다
-- `"indexing_required"`: 소스 JAR은 있지만 인덱싱이 필요합니다
+**Error States:**
+- `"source_jar_not_found"` - Source not found, use `register_source`
+- `"indexing_required"` - Source exists but needs indexing, use `index_artifact`
+- `"internal_error"` - Server-side processing error
 
-#### 파일 기반 탐색 도구
-- `"success"`: 정상적으로 데이터를 반환했습니다  
-- `"source_jar_not_found"`: 소스 JAR 파일을 찾을 수 없습니다
+**Error States (register_source only):**
+- `"resource_not_found"` - Invalid file path or URI
+- `"download_failed"` - Remote source download failed
+- `"invalid_source"` - Corrupted or unsupported source format
+- `"unsupported_source_type"` - Only JAR files, directories, or Git repositories supported
+- `"git_clone_failed"` - Git repository access failed (permission denied or not found)
+- `"git_ref_not_found"` - Git branch/tag/commit not found
 
-### 공통 에러 응답
-
-각 MCP Tool에서 발생할 수 있는 공통 에러 응답들입니다.
-
-#### 소스 JAR 없음
+**Error Response Format:**
 ```json
 {
-  "status": "source_jar_not_found",
-  "message": "해당 아티팩트의 소스를 찾을 수 없습니다. register_source 도구를 사용하여 소스를 등록해주세요.",
-  "suggested_action": "register_source"
-}
-```
-
-#### 인덱싱 필요 (탐색적 검색 및 메서드/필드 중심 분석 도구만)
-```json
-{
-  "status": "indexing_required", 
-  "message": "해당 아티팩트가 아직 인덱싱되지 않았습니다. index_artifact 도구를 사용하여 인덱싱을 수행해주세요.",
-  "suggested_action": "index_artifact"
-}
-```
-
-#### 내부 서버 에러
-```json
-{
-  "status": "internal_error",
-  "message": "내부 서버 에러가 발생했습니다: [상세 에러 메시지]"
+  "status": "error_code",
+  "message": "Descriptive error message",
+  "suggested_action": "recommended_tool_name"  // when applicable
 }
 ```
