@@ -1,8 +1,5 @@
 # register_source mcp_tool 상세 구현 설계
 
-참고: 
-![[02_architecture#Sotrage Layer Directory 구조]]
-
 ## 아키텍처 분석 요약
 - **스토리지 구조**: `~/.jar-indexer/` 하위에 `code/`, `source-jar/`, `git-bare/` 디렉토리
 - **Git 저장소 지원**: bare clone → worktree 생성 → 인덱싱 흐름
@@ -42,8 +39,8 @@
    - URI 파싱 및 검증
    - 지원 URI 형태:
      - `file://` (로컬 JAR/디렉토리)
-     - `https://` (원격 JAR)
-     - `git+https://`, `git+ssh://` (Git 저장소)
+     - `https://` (원격 JAR 또는 Git 저장소 - suffix로 구분)
+     - `git@host:user/repo` (SSH Git 저장소)
 
 ### Phase 3: Git 저장소 처리
 1. **Git 핸들러** (`core/git_handler.py`)
@@ -132,21 +129,21 @@ register_source(
   - [x] `src/utils/__init__.py` 생성
 
 ### Phase 2: 코어 기능 구현
-- [ ] `src/core/storage.py` 구현
-  - [ ] 스토리지 디렉토리 구조 생성 기능
-  - [ ] `~/.jar-indexer` 홈 디렉토리 관리
-  - [ ] Maven 좌표 기반 경로 생성 유틸리티
-  - [ ] 디렉토리 권한 및 안전성 검증
-- [ ] `src/core/source_processor.py` 구현
-  - [ ] URI 파싱 및 검증 로직
-  - [ ] `file://` URI 처리
-  - [ ] `https://` URI 처리
-  - [ ] `git+https://`, `git+ssh://` URI 처리
-  - [ ] URI 타입 감지 및 분류
-- [ ] `src/utils/validation.py` 구현
-  - [ ] Maven 좌표 검증 (group_id, artifact_id, version)
-  - [ ] URI 형식 검증
-  - [ ] 파라미터 타입 검증
+- [x] `src/core/storage.py` 구현
+  - [x] 스토리지 디렉토리 구조 생성 기능
+  - [x] `~/.jar-indexer` 홈 디렉토리 관리
+  - [x] Maven 좌표 기반 경로 생성 유틸리티
+  - [x] 디렉토리 권한 및 안전성 검증
+- [x] `src/core/source_processor.py` 구현
+  - [x] URI 파싱 및 검증 로직
+  - [x] `file://` URI 처리
+  - [x] `https://` URI 처리 (.jar/.git suffix 기반 분류)
+  - [x] `git@host:user/repo` SSH URI 처리
+  - [x] URI 타입 감지 및 분류
+- [x] `src/utils/validation.py` 구현
+  - [x] Maven 좌표 검증 (group_id, artifact_id, version)
+  - [x] URI 형식 검증
+  - [x] 파라미터 타입 검증
 - [ ] `src/utils/file_utils.py` 구현
   - [ ] 파일 다운로드 유틸리티
   - [ ] JAR 파일 검증

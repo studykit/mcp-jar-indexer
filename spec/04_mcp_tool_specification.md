@@ -49,7 +49,7 @@ register_source(
     group_id: "org.springframework",
     artifact_id: "spring-core",
     version: "5.3.21",
-    source_uri: "git+https://github.com/spring-projects/spring-framework.git",
+    source_uri: "https://github.com/spring-projects/spring-framework.git",
     auto_index: True,  # 선택사항, 기본값: True (등록 후 자동 인덱싱 여부)
     git_ref: "v5.3.21"  # 선택사항, 단, Git URI인 경우 태그/브랜치/커밋 SHA 지정 필수
 )
@@ -67,14 +67,15 @@ register_source(
 - **소스 디렉토리**: `file:///Users/user/projects/spring-framework/spring-core/src/main/java`
 - **프로젝트 루트**: `file:///Users/user/projects/my-library/src`
 - **압축 해제된 소스**: `file:///tmp/spring-core-5.3.21-sources`
-- **로컬 Git 저장소**: `file:///Users/user/projects/my-git-repo` (Git 저장소인 경우 git_ref 파라미터 사용 필수 )
+- **로컬 Git 저장소**: `file:///Users/user/projects/my-git-repo` (Git 저장소인 경우 git_ref 파라미터 사용 필수)
 
 ### Git 저장소
-- **GitHub 공개 저장소**: `git+https://github.com/spring-projects/spring-framework.git`
-- **GitHub 사설 저장소**: `git+https://github.com/company/private-lib.git`
-- **GitLab**: `git+https://gitlab.com/user/project.git`
-- **사내 Git 서버**: `git+https://git.company.com/team/library.git`
-- **SSH 접근**: `git+ssh://git@github.com/user/repo.git`
+- **GitHub 공개 저장소 (HTTPS)**: `https://github.com/spring-projects/spring-framework.git`
+- **GitHub 사설 저장소 (HTTPS)**: `https://github.com/company/private-lib.git`
+- **GitHub SSH 접근**: `git@github.com:spring-projects/spring-framework`
+- **GitLab HTTPS**: `https://gitlab.com/user/project.git`
+- **GitLab SSH**: `git@gitlab.com:user/project`
+- **사내 Git 서버**: `https://git.company.com/team/library.git`
 
 **git_ref 파라미터 (Git URI인 경우):**
 - **태그**: `"v5.3.21"`, `"1.0.0"`, `"release-2023.12"`
