@@ -122,6 +122,10 @@ For complete dependency list and version requirements, refer to `spec/03_tech_st
 - **MCP Tool Implementation**: Use `spec/04_mcp_tool_specification.md` for the complete list of MCP tools to implement
 - **Implementation Details**: Use `spec/dev/` for specific tool specifications and development workflows
 
+## When to Reference Guide Documents
+
+- **Code Standards**: Use `guide/code_style_guide.md` for formatting rules, type annotations, naming conventions, and best practices
+
 ## Configuration
 
 - Base storage directory: `~/.jar-indexer/` (configurable via `StorageManager`)
@@ -130,74 +134,17 @@ For complete dependency list and version requirements, refer to `spec/03_tech_st
 
 ## Code Style Guidelines
 
-### Indentation Standards
-**Follow project-wide indentation configuration:**
+For detailed coding standards, formatting rules, and best practices, refer to `guide/code_style_guide.md`.
 
-- **Python Files**: 2 spaces (configured in `pyproject.toml` - `indent-width = 2`)
-- **All Files**: Use spaces, not tabs (`.editorconfig` - `indent_style = space`)
-- **General**: 2 spaces for most file types (JSON, YAML, JS/TS, HTML/CSS)
-- **Exception**: Makefiles use tabs as required by Make
+**When to reference the code style guide:**
+- Before writing new code to ensure consistent formatting and structure
+- When reviewing code to verify adherence to project standards  
+- When setting up IDE configurations or linting rules
+- When onboarding new developers to the project
+- When resolving style-related conflicts or questions
 
-```python
-# Good - 2 space indentation
-def example_function(param: str) -> None:
-  if param:
-    result = process_data(param)
-    return result
-  return None
-
-class ExampleClass:
-  def __init__(self, value: int) -> None:
-    self.value = value
-    
-  def method(self) -> str:
-    return f"Value: {self.value}"
-```
-
-**Configuration Sources:**
-- `.editorconfig`: `indent_size = 2`, `indent_style = space`
-- `pyproject.toml`: `[tool.ruff.format]` `indent-style = "space"`
-- Ruff enforces consistent indentation via formatting
-
-### Type Annotations
-**ALWAYS use explicit type annotations for better IDE support and code clarity:**
-
-```python
-# Good - Explicit type annotations
-def process_data(items: List[str], count: int) -> Dict[str, Any]:
-    result: Dict[str, Any] = {}
-    return result
-
-def test_method(self, fixture_param: SomeType) -> None:
-    # Test implementation
-    pass
-
-# Fixtures with proper return types
-@pytest.fixture
-def sample_data(self) -> Path:
-  return Path("/some/path")
-```
-
-**Avoid generic or missing annotations:**
-```python
-# Bad - Generic or missing types
-def process_data(items, count):  # No annotations
-  result = {}  # Type unclear
-  return result
-
-def test_method(self, fixture_param):  # Missing types
-  pass
-```
-
-### Key Benefits
-- **IDE Support**: Better autocomplete, error detection, and refactoring
-- **Code Clarity**: Makes function contracts explicit
-- **Debugging**: Easier to identify type-related issues
-- **Maintenance**: Helps future developers understand expected data types
-
-### TypedDict Usage
-When using `TypedDict` with optional fields (`total=False`), add type suppression for test files:
-```python
-# At the top of test files
-# pyright: reportTypedDictNotRequiredAccess=false
-```
+**Key highlights:**
+- 2-space indentation for all Python files
+- Explicit type annotations required for all functions
+- Google-style docstrings for public APIs
+- Consistent import organization following PEP 8
