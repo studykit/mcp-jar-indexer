@@ -130,6 +130,35 @@ For complete dependency list and version requirements, refer to `spec/03_tech_st
 
 ## Code Style Guidelines
 
+### Indentation Standards
+**Follow project-wide indentation configuration:**
+
+- **Python Files**: 2 spaces (configured in `pyproject.toml` - `indent-width = 2`)
+- **All Files**: Use spaces, not tabs (`.editorconfig` - `indent_style = space`)
+- **General**: 2 spaces for most file types (JSON, YAML, JS/TS, HTML/CSS)
+- **Exception**: Makefiles use tabs as required by Make
+
+```python
+# Good - 2 space indentation
+def example_function(param: str) -> None:
+  if param:
+    result = process_data(param)
+    return result
+  return None
+
+class ExampleClass:
+  def __init__(self, value: int) -> None:
+    self.value = value
+    
+  def method(self) -> str:
+    return f"Value: {self.value}"
+```
+
+**Configuration Sources:**
+- `.editorconfig`: `indent_size = 2`, `indent_style = space`
+- `pyproject.toml`: `[tool.ruff.format]` `indent-style = "space"`
+- Ruff enforces consistent indentation via formatting
+
 ### Type Annotations
 **ALWAYS use explicit type annotations for better IDE support and code clarity:**
 
@@ -146,18 +175,18 @@ def test_method(self, fixture_param: SomeType) -> None:
 # Fixtures with proper return types
 @pytest.fixture
 def sample_data(self) -> Path:
-    return Path("/some/path")
+  return Path("/some/path")
 ```
 
 **Avoid generic or missing annotations:**
 ```python
 # Bad - Generic or missing types
 def process_data(items, count):  # No annotations
-    result = {}  # Type unclear
-    return result
+  result = {}  # Type unclear
+  return result
 
 def test_method(self, fixture_param):  # Missing types
-    pass
+  pass
 ```
 
 ### Key Benefits

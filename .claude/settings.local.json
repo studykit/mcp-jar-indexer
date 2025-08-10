@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(uv run pytest:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(uv run ruff:*)"
     ],
     "deny": []
   }
