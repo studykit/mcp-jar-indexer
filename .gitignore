@@ -130,3 +130,5 @@ cython_debug/
 .DS_Store
 .conversation/
 .obsidian/
+.serena/cache/
+.ruff_cache/
