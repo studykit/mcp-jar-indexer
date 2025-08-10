@@ -150,13 +150,20 @@ register_source(
   - [x] 파일 복사/심볼릭 링크 생성
 
 ### Phase 3: Git 저장소 처리
-- [ ] `src/core/git_handler.py` 구현
-  - [ ] Git bare clone 생성 기능
-  - [ ] Worktree 생성 및 관리
-  - [ ] git_ref (브랜치/태그/커밋) 처리
-  - [ ] Git 인증 처리 (SSH key, 토큰)
-  - [ ] Git 작업 에러 핸들링
-  - [ ] 기존 저장소 업데이트 처리
+- [x] `src/core/git_handler.py` 구현
+  - [x] Git bare clone 생성 기능
+  - [x] Worktree 생성 및 관리
+  - [x] git_ref (브랜치/태그/커밋) 처리
+  - [x] Git 인증 처리 (SSH key, 토큰)
+  - [x] Git 작업 에러 핸들링
+  - [x] 기존 저장소 업데이트 처리
+- [x] `tests/core/test_git_handler.py` 테스트 구현
+  - [x] GitHandler 초기화 및 Git 저장소 감지 테스트
+  - [x] Bare 저장소 복제 테스트 (성공/실패/인증 에러)
+  - [x] Worktree 생성/삭제/목록 조회 테스트
+  - [x] Git 참조 검증 및 기본 브랜치 감지 테스트
+  - [x] 인증 설정 및 에러 처리 테스트
+  - [x] Git 예외 클래스 테스트 (35개 테스트 케이스)
 
 ### Phase 4: register_source MCP Tool
 - [ ] `src/tools/register_source.py` 구현
@@ -169,11 +176,15 @@ register_source(
   - [ ] 롤백 메커니즘 구현
 
 ### Phase 5: 에러 처리 및 응답
-- [ ] 에러 클래스 정의
+- [x] Git 관련 에러 클래스 정의 (`src/core/git_handler.py`에 구현됨)
+  - [x] `GitError` (기본 Git 에러 클래스)
+  - [x] `GitCloneFailedError` 정의
+  - [x] `GitRefNotFoundError` 정의
+  - [x] `GitAuthenticationError` 정의
+  - [x] `GitWorktreeError` 정의
+- [ ] 기타 에러 클래스 정의
   - [ ] `ResourceNotFoundError` 정의
   - [ ] `DownloadFailedError` 정의
-  - [ ] `GitCloneFailedError` 정의
-  - [ ] `GitRefNotFoundError` 정의
   - [ ] `InvalidSourceError` 정의
   - [ ] `UnsupportedSourceTypeError` 정의
 - [ ] 응답 형식 구현
