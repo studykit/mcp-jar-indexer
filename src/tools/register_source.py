@@ -107,14 +107,18 @@ async def register_source(
           storage_manager, parsed_info, group_id, artifact_id, version
         )
       else:
-        raise UnsupportedSourceTypeError(f"Unsupported file type: {parsed_info['type']}")
+        raise UnsupportedSourceTypeError(
+          f"Unsupported file type: {parsed_info['type']}"
+        )
     elif uri_type == "http":
       if parsed_info["type"] == "jar":
         await _handle_remote_jar_file(
           storage_manager, parsed_info, group_id, artifact_id, version
         )
       else:
-        raise UnsupportedSourceTypeError(f"Unsupported HTTP type: {parsed_info['type']}")
+        raise UnsupportedSourceTypeError(
+          f"Unsupported HTTP type: {parsed_info['type']}"
+        )
     elif uri_type == "git":
       if git_ref is None:
         git_ref = "main"  # Default to main branch
@@ -129,11 +133,15 @@ async def register_source(
       # For now, just return registered_only until indexing is implemented
       indexed = False
       status = "registered_only"
-      message = "Source registered successfully. Use index_artifact tool to perform indexing."
+      message = (
+        "Source registered successfully. Use index_artifact tool to perform indexing."
+      )
     else:
       indexed = False
       status = "registered_only"
-      message = "Source registered successfully. Use index_artifact tool to perform indexing."
+      message = (
+        "Source registered successfully. Use index_artifact tool to perform indexing."
+      )
 
     return {
       "group_id": group_id,
@@ -193,9 +201,7 @@ async def _handle_local_jar_file(
   try:
     local_path = Path(parsed_info["path"])
     if not local_path.exists():
-      raise ResourceNotFoundError(
-        f"Local JAR file not found: {local_path}"
-      )
+      raise ResourceNotFoundError(f"Local JAR file not found: {local_path}")
     if not validate_jar_file(local_path):
       raise InvalidSourceError(f"Invalid JAR file: {local_path}")
 
@@ -205,6 +211,7 @@ async def _handle_local_jar_file(
     target_path = target_dir / f"{artifact_id}-{version}-sources.jar"
 
     import shutil
+
     shutil.copy2(local_path, target_path)
     logger.info(f"Copied JAR file to: {target_path}")
 
@@ -268,10 +275,11 @@ async def _handle_local_directory(
     # Copy directory to code directory
     target_path = storage_manager.get_code_path(group_id, artifact_id, version)
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Remove existing directory if it exists
     if target_path.exists():
       import shutil
+
       shutil.rmtree(target_path)
 
     safe_copy_tree(source_path, target_path)
@@ -379,7 +387,9 @@ async def handle_register_source(arguments: Dict[str, Any]) -> list[TextContent]
 
     import json
 
-    return [TextContent(type="text", text=json.dumps(result, indent=2, ensure_ascii=False))]
+    return [
+      TextContent(type="text", text=json.dumps(result, indent=2, ensure_ascii=False))
+    ]
 
   except Exception as e:
     logger.error(f"Error in handle_register_source: {e}")
@@ -389,4 +399,8 @@ async def handle_register_source(arguments: Dict[str, Any]) -> list[TextContent]
     }
     import json
 
-    return [TextContent(type="text", text=json.dumps(error_result, indent=2, ensure_ascii=False))]
+    return [
+      TextContent(
+        type="text", text=json.dumps(error_result, indent=2, ensure_ascii=False)
+      )
+    ]
