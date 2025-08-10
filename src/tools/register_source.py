@@ -355,7 +355,7 @@ REGISTER_SOURCE_TOOL = Tool(
       },
       "source_uri": {
         "type": "string",
-        "description": "URI to the source (JAR file, directory, or Git repository)",
+        "description": "URI to the source (JAR file, directory, or Git repository)\nExamples: 'file:///path/to/library-source.jar', 'https://repo1.maven.org/maven2/org/example/lib-source.jar', 'file:///path/to/src/dir', 'https://github.com/user/repo.git', 'git@github.com:user/repo.git'",
       },
       "auto_index": {
         "type": "boolean",

@@ -68,7 +68,10 @@ class TestRegisterSource:
 
   @pytest.mark.asyncio
   async def test_register_source_success_jar_auto_index_false(
-    self, mock_storage_manager: MagicMock, mock_source_processor: MagicMock, valid_params: Dict[str, Any]
+    self,
+    mock_storage_manager: MagicMock,
+    mock_source_processor: MagicMock,
+    valid_params: Dict[str, Any],
   ) -> None:
     """Test successful registration of JAR file with auto_index=False."""
     with (
@@ -96,7 +99,10 @@ class TestRegisterSource:
 
   @pytest.mark.asyncio
   async def test_register_source_success_jar_auto_index_true(
-    self, mock_storage_manager: MagicMock, mock_source_processor: MagicMock, valid_params: Dict[str, Any]
+    self,
+    mock_storage_manager: MagicMock,
+    mock_source_processor: MagicMock,
+    valid_params: Dict[str, Any],
   ) -> None:
     """Test successful registration of JAR file with auto_index=True (default)."""
     with (
@@ -263,7 +269,9 @@ class TestRegisterSource:
       )
 
   @pytest.mark.asyncio
-  async def test_register_source_validation_error(self, valid_params: Dict[str, Any]) -> None:
+  async def test_register_source_validation_error(
+    self, valid_params: Dict[str, Any]
+  ) -> None:
     """Test register_source with validation error."""
     with patch(
       "src.tools.register_source.validate_maven_coordinates",
@@ -555,7 +563,9 @@ class TestRegisterSourceErrorHandling:
       assert "Invalid JAR" in result["message"]
 
   @pytest.mark.asyncio
-  async def test_unsupported_source_type_error(self, valid_params: Dict[str, Any]) -> None:
+  async def test_unsupported_source_type_error(
+    self, valid_params: Dict[str, Any]
+  ) -> None:
     """Test handling of UnsupportedSourceTypeError."""
     mock_source_processor = MagicMock()
     mock_source_processor.parse_uri.return_value = (
@@ -631,7 +641,9 @@ class TestHandleLocalJarFile:
       mock_copy.assert_called_once()
 
   @pytest.mark.asyncio
-  async def test_handle_local_jar_file_not_found(self, mock_storage_manager: MagicMock) -> None:
+  async def test_handle_local_jar_file_not_found(
+    self, mock_storage_manager: MagicMock
+  ) -> None:
     """Test handling of non-existent JAR file."""
     parsed_info = {"path": "/nonexistent/file.jar"}
 
@@ -695,7 +707,9 @@ class TestHandleRemoteJarFile:
     return mock
 
   @pytest.mark.asyncio
-  async def test_handle_remote_jar_file_success(self, mock_storage_manager: MagicMock) -> None:
+  async def test_handle_remote_jar_file_success(
+    self, mock_storage_manager: MagicMock
+  ) -> None:
     """Test successful handling of remote JAR file."""
     parsed_info = {"url": "https://example.com/spring-core-5.3.21-sources.jar"}
 
@@ -716,7 +730,9 @@ class TestHandleRemoteJarFile:
       mock_download.assert_called_once()
 
   @pytest.mark.asyncio
-  async def test_handle_remote_jar_file_download_failed(self, mock_storage_manager: MagicMock) -> None:
+  async def test_handle_remote_jar_file_download_failed(
+    self, mock_storage_manager: MagicMock
+  ) -> None:
     """Test handling of download failure."""
     parsed_info = {"url": "https://example.com/spring-core-5.3.21-sources.jar"}
 
@@ -807,7 +823,9 @@ class TestHandleLocalDirectory:
       mock_copy.assert_called_once_with(temp_directory, target_path)
 
   @pytest.mark.asyncio
-  async def test_handle_local_directory_not_found(self, mock_storage_manager: MagicMock) -> None:
+  async def test_handle_local_directory_not_found(
+    self, mock_storage_manager: MagicMock
+  ) -> None:
     """Test handling of non-existent directory."""
     parsed_info = {"path": "/nonexistent/directory"}
 
@@ -1057,7 +1075,9 @@ class TestHandleRegisterSource:
     }
 
   @pytest.mark.asyncio
-  async def test_handle_register_source_success(self, valid_arguments: Dict[str, Any]) -> None:
+  async def test_handle_register_source_success(
+    self, valid_arguments: Dict[str, Any]
+  ) -> None:
     """Test successful MCP tool handler."""
     mock_result: Dict[str, Any] = {
       "group_id": "org.springframework",
@@ -1111,7 +1131,9 @@ class TestHandleRegisterSource:
       )
 
   @pytest.mark.asyncio
-  async def test_handle_register_source_exception(self, valid_arguments: Dict[str, Any]) -> None:
+  async def test_handle_register_source_exception(
+    self, valid_arguments: Dict[str, Any]
+  ) -> None:
     """Test MCP tool handler with exception."""
     with patch(
       "src.tools.register_source.register_source",
