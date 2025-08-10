@@ -50,29 +50,3 @@ uv run ruff check && uv run ruff format
 # Run the main module
 uv run python -m src.main
 ```
-
-## System Commands (Darwin/macOS)
-```bash
-# List files (standard Unix)
-ls -la
-
-# Change directory
-cd <directory>
-
-# Search in files (use ripgrep if available)
-grep -r "pattern" .
-
-# Find files
-find . -name "*.py"
-
-# Git operations
-git status
-git add .
-git commit -m "message"
-```
-
-## Project-Specific Storage
-- **Base Directory**: `~/.jar-indexer/`
-- **Code Storage**: `~/.jar-indexer/code/{group_id}/{artifact_id}/{version}/`
-- **Source JARs**: `~/.jar-indexer/source-jar/{group_id}/{artifact_id}/{version}/`
-- **Git Repos**: `~/.jar-indexer/git-bare/{group_id}/{artifact_id}/`

@@ -41,7 +41,7 @@ jar-indexer/
 ## Key Components
 
 ### Core Classes
-- **SourceProcessor**: Handles different URI types (file://, https://, git+https://) with 2-space indentation
+- **SourceProcessor**: Handles different URI types (file://, https://, git@) with 2-space indentation
 - **StorageManager**: Manages `~/.jar-indexer/` directory with Maven coordinate paths
 
 ### Utility Functions
