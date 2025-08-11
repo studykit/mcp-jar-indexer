@@ -53,7 +53,9 @@ class TestSearchFileContent:
     }
 
   @pytest.mark.asyncio
-  async def test_search_file_content_success(self, temp_storage: Path, mock_search_result: Dict[str, Any]):
+  async def test_search_file_content_success(
+    self, temp_storage: Path, mock_search_result: Dict[str, Any]
+  ):
     """Test successful file content search."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -152,7 +154,9 @@ class TestSearchFileContent:
         "src.tools.search_file_content.is_artifact_code_available", return_value=True
       ) as _,
       patch("src.tools.search_file_content.StorageManager") as mock_storage_class,
-      patch("src.tools.search_file_content.normalize_path", return_value="nonexistent") as _,
+      patch(
+        "src.tools.search_file_content.normalize_path", return_value="nonexistent"
+      ) as _,
     ):
       mock_storage = MagicMock()
       mock_storage.get_code_path = MagicMock(return_value=code_path)
@@ -178,7 +182,9 @@ class TestSearchFileContent:
         "src.tools.search_file_content.is_artifact_code_available", return_value=True
       ) as _,
       patch("src.tools.search_file_content.StorageManager") as mock_storage_class,
-      patch("src.tools.search_file_content.normalize_path", return_value="test.txt") as _,
+      patch(
+        "src.tools.search_file_content.normalize_path", return_value="test.txt"
+      ) as _,
     ):
       mock_storage = MagicMock()
       mock_storage.get_code_path = MagicMock(return_value=code_path)
@@ -191,7 +197,9 @@ class TestSearchFileContent:
       assert result["status"] == "start_path_not_directory"
 
   @pytest.mark.asyncio
-  async def test_handle_search_file_content_success(self, mock_search_result: Dict[str, Any]):
+  async def test_handle_search_file_content_success(
+    self, mock_search_result: Dict[str, Any]
+  ):
     """Test handle_search_file_content success case."""
     mock_result: Dict[str, Any] = {
       "status": "success",

@@ -189,7 +189,7 @@ async def handle_list_folder_tree(arguments: Dict[str, Any]) -> list[TextContent
 
   except Exception as e:
     logger.error(f"Error in handle_list_folder_tree: {e}")
-    error_result = {
+    error_result: ListFolderTreeResult = {
       "status": "internal_error",
       "path": arguments.get("path", ""),
       "max_depth": arguments.get("max_depth", 3),

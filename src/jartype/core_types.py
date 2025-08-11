@@ -145,3 +145,11 @@ class SearchFilesByPatternResult(TypedDict):
   """search_files_by_pattern return type"""
 
   files: list[FileSearchResult]  # Matched file information list
+
+
+class SearchCachedArtifactResult(TypedDict, total=False):
+  """search_cached_artifact MCP tool response"""
+
+  status: str  # "success", "not_found", "invalid_coordinates", or "internal_error"
+  paths: list[str]  # List of absolute paths to source JARs (empty if not found)
+  message: str  # Error or informational message (optional)

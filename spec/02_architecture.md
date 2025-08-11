@@ -14,16 +14,18 @@
 │  ├─ register_source        ├─ get_import_section    │
 │  ├─ index_artifact         ├─ get_method_source     │
 │  ├─ list_artifacts         ├─ list_folder_tree      │
-│  ├─ list_packages          ├─ search_file_names     │
-│  ├─ list_types             ├─ search_file_content   │
-│  ├─ get_type_source        ├─ get_file              │
+│  ├─ search_cached_artifact ├─ search_file_names     │
+│  ├─ list_packages          ├─ search_file_content   │
+│  ├─ list_types             ├─ get_file              │
+│  ├─ get_type_source        │                        │
 │  ├─ list_methods           │                        │
 │  └─ list_fields            │                        │
 ├─────────────────────────────────────────────────────┤
 │  Core Services                                      │
 │  ├─ Source JAR Finder   ├─ Java/Kotlin Parser       │
 │  ├─ JAR Indexer         ├─ Cache Manager            │
-│  └─ Metadata Extractor                              │
+│  ├─ Maven/Gradle Cache  └─ Metadata Extractor       │
+│  │  Scanner                                         │
 ├─────────────────────────────────────────────────────┤
 │  Storage Layer                                      │
 │  ├─ ~/.jar-indexer/code/{artifact}/                 │
@@ -86,8 +88,10 @@
    ↓
 4. [에러 시] 에러 유형별 처리
    ├─ 소스 없음 (source_jar_not_found):
+   │  ├─ search_cached_artifact 도구로 로컬 캐시 확인
    │  └─ register_source 도구 호출
    │     ├─ Claude Code가 Maven/Gradle 다운로드 후 URI 전달
+   │     ├─ search_cached_artifact로 발견한 소스 JAR 등록
    │     ├─ 사용자가 직접 소스 등록 (JAR/디렉토리/Git)
    │     └─ 등록 후 자동 인덱싱 (auto_index=True)
    └─ 인덱싱 필요 (indexing_required):
@@ -102,4 +106,28 @@
 5. 요청된 데이터 조회 및 반환
    ↓
 6. Claude Code에 응답
+```
+
+## 캐시 검색 워크플로우
+
+```
+1. search_cached_artifact 요청
+   ├─ group_id: "org.springframework"
+   ├─ artifact_id: "spring-core"
+   ├─ version_filter: "5.3.21" (선택사항)
+   └─ cache: "maven,gradle" (기본값)
+   ↓
+2. 로컬 캐시 경로 검색
+   ├─ Maven 저장소: ~/.m2/repository/
+   └─ Gradle 캐시: ~/.gradle/caches/
+   ↓
+3. 소스 JAR 검색
+   ├─ version_filter 있음: 특정 버전만 검색
+   └─ version_filter 없음: 모든 버전 검색
+   ↓
+4. 검색 결과 반환
+   ├─ 성공: paths 배열에 모든 발견된 소스 JAR 경로
+   └─ 실패: 빈 paths 배열과 오류 메시지
+   ↓
+5. Claude Code가 소스 JAR 경로로 register_source 호출 가능
 ```

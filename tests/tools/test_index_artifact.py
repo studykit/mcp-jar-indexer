@@ -183,7 +183,9 @@ class TestIndexArtifact:
       assert "No JAR files found" in result.get("message", "")
 
   @pytest.mark.asyncio
-  async def test_index_artifact_code_already_available(self, temp_storage: Path) -> None:
+  async def test_index_artifact_code_already_available(
+    self, temp_storage: Path
+  ) -> None:
     """Test artifact code already available case."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)

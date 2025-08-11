@@ -5,10 +5,11 @@ MCP server providing 14 tools to index and explore Java/Kotlin library source co
 
 ## Tool Categories
 
-**Management (3 tools):**
+**Management (4 tools):**
 - `register_source` - Register JAR files, directories, or Git repositories
 - `index_artifact` - Index registered sources for exploration  
 - `list_artifacts` - List artifacts and check their status (source/index/extracted)
+- `search_cached_artifact` - Find source JAR files in Maven/Gradle local caches
 
 **Package/Type Exploration (3 tools):**
 - `list_packages` - Browse package structure hierarchy
@@ -170,6 +171,56 @@ Common combinations:
 - `"source-jar,index,file-searchable"` - JAR fully indexed with file browser tools available
 - `"source-git,index,file-searchable"` - Git repository fully indexed with file browser tools available
 - `"source-dir,index,file-searchable"` - Directory fully indexed with file browser tools available
+
+
+#### search_cached_artifact
+Search for source JAR files in Maven/Gradle local repository caches.
+
+This tool scans the local Maven repository (`~/.m2/repository`) and Gradle cache (`~/.gradle/caches`) to find source JARs that match the specified Maven coordinates. Returns all found source JAR absolute paths.
+
+**Parameters:**
+- `group_id`, `artifact_id` - Maven coordinates (required)
+- `version_filter` - Version constraints (optional, if not provided searches all versions)
+- `cache` - Cache types to search: `"maven"`, `"gradle"`, or `"maven,gradle"` (optional, default: `"maven,gradle"`)
+
+**Request (specific version):**
+```python
+search_cached_artifact(
+  group_id: "org.springframework",
+  artifact_id: "spring-core",
+  version_filter: "5.3.21",
+  cache: "maven,gradle"
+)
+```
+
+**Request (all versions):**
+```python
+search_cached_artifact(
+  group_id: "org.springframework",
+  artifact_id: "spring-core",
+  cache: "maven,gradle"
+)
+```
+
+**Response (success):**
+```json
+{
+  "status": "success",
+  "paths": [
+    "/Users/user/.m2/repository/org/springframework/spring-core/5.3.21/spring-core-5.3.21-sources.jar",
+    "/Users/user/.m2/repository/org/springframework/spring-core/6.0.0/spring-core-6.0.0-sources.jar"
+  ]
+}
+```
+
+**Response (not found):**
+```json
+{
+  "status": "not_found",
+  "paths": [],
+  "message": "No source JAR files found for org.springframework:spring-core:5.3.21"
+}
+```
 
 
 ### Package/Type Exploration Tools

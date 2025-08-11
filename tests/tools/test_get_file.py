@@ -37,7 +37,9 @@ class TestGetFile:
     }
 
   @pytest.mark.asyncio
-  async def test_get_file_success(self, temp_storage: Path, mock_file_content_result: Dict[str, Any]) -> None:
+  async def test_get_file_success(
+    self, temp_storage: Path, mock_file_content_result: Dict[str, Any]
+  ) -> None:
     """Test successful file retrieval."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -137,7 +139,9 @@ class TestGetFile:
       assert result["status"] == "not_file"
 
   @pytest.mark.asyncio
-  async def test_handle_get_file_success(self, mock_file_content_result: Dict[str, Any]) -> None:
+  async def test_handle_get_file_success(
+    self, mock_file_content_result: Dict[str, Any]
+  ) -> None:
     """Test handle_get_file success case."""
     mock_result: Dict[str, Any] = {
       "status": "success",

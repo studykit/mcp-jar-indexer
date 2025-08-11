@@ -115,7 +115,9 @@ class TestGitHandler:
     assert git_uri in call_args
 
   @patch("subprocess.run")
-  def test_clone_bare_repository_already_exists(self, mock_subprocess: MagicMock) -> None:
+  def test_clone_bare_repository_already_exists(
+    self, mock_subprocess: MagicMock
+  ) -> None:
     """Test bare repository cloning when repository already exists."""
     git_uri = "https://github.com/user/repo.git"
     group_id = "com.example"
@@ -150,7 +152,9 @@ class TestGitHandler:
     assert "Git authentication failed" in str(exc_info.value)
 
   @patch("subprocess.run")
-  def test_clone_bare_repository_clone_failure(self, mock_subprocess: MagicMock) -> None:
+  def test_clone_bare_repository_clone_failure(
+    self, mock_subprocess: MagicMock
+  ) -> None:
     """Test bare repository cloning with general failure."""
     mock_result = Mock()
     mock_result.returncode = 1
@@ -420,7 +424,9 @@ class TestGitHandler:
     assert result is True
 
   @patch("src.core.git_handler.Repo")
-  def test_validate_git_ref_with_origin_prefix(self, mock_repo_class: MagicMock) -> None:
+  def test_validate_git_ref_with_origin_prefix(
+    self, mock_repo_class: MagicMock
+  ) -> None:
     """Test git reference validation with origin prefix fallback."""
     mock_repo = Mock()
     mock_git = Mock()

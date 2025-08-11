@@ -186,7 +186,11 @@ class TestIsArtifactCodeIndexed:
 
       # Create valid index.json
       index_file = index_dir / "index.json"
-      index_data: dict[str, Any] = {"version": "1.0", "timestamp": "2024-01-01T00:00:00Z", "files": []}
+      index_data: dict[str, Any] = {
+        "version": "1.0",
+        "timestamp": "2024-01-01T00:00:00Z",
+        "files": [],
+      }
       index_file.write_text(json.dumps(index_data))
 
       result = is_artifact_code_indexed("org.springframework", "spring-core", "5.3.21")

@@ -359,7 +359,9 @@ class TestGitFunctions:
       extract_7z_source(str(nonexistent_archive), str(target_dir))
 
   @patch("src.utils.source_extraction.git.Repo")
-  def test_create_git_worktree_success(self, mock_repo_class: MagicMock, temp_dir: Path) -> None:
+  def test_create_git_worktree_success(
+    self, mock_repo_class: MagicMock, temp_dir: Path
+  ) -> None:
     """Test Git worktree creation success."""
     from src.utils.source_extraction import create_git_worktree
 

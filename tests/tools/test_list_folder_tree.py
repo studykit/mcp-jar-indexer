@@ -152,7 +152,9 @@ class TestListFolderTree:
       assert result["status"] == "not_directory"
 
   @pytest.mark.asyncio
-  async def test_handle_list_folder_tree_success(self, mock_directory_tree_result: Dict[str, Any]) -> None:
+  async def test_handle_list_folder_tree_success(
+    self, mock_directory_tree_result: Dict[str, Any]
+  ) -> None:
     """Test handle_list_folder_tree success case."""
     mock_result: Dict[str, Any] = {
       "status": "success",

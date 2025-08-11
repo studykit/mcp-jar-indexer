@@ -20,6 +20,10 @@ from .tools.search_file_content import (
   SEARCH_FILE_CONTENT_TOOL,
   handle_search_file_content,
 )
+from .tools.search_cached_artifact import (
+  SEARCH_CACHED_ARTIFACT_TOOL,
+  handle_search_cached_artifact,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -43,6 +47,7 @@ def create_server() -> Server:
       GET_FILE_TOOL,
       SEARCH_FILE_NAMES_TOOL,
       SEARCH_FILE_CONTENT_TOOL,
+      SEARCH_CACHED_ARTIFACT_TOOL,
     ]
 
   @server.call_tool()
@@ -64,6 +69,8 @@ def create_server() -> Server:
       return await handle_search_file_names(arguments or {})
     elif name == "search_file_content":
       return await handle_search_file_content(arguments or {})
+    elif name == "search_cached_artifact":
+      return await handle_search_cached_artifact(arguments or {})
     else:
       raise ValueError(f"Unknown tool: {name}")
 
@@ -89,8 +96,9 @@ async def main_async():
 
 **Getting Started:**
 1. Use `list_artifacts` to check if the library you need is already indexed
-2. If not available, use `register_source` to index JAR files or Git repositories
-3. Then explore using search and navigation tools to analyze the source code.""",
+2. If not available, try `search_cached_artifact` to find source JARs in your local Maven/Gradle caches
+3. Use `register_source` to register the found source JAR or other sources (Git repositories, directories)
+4. Then explore using search and navigation tools to analyze the source code.""",
   )
 
   async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):

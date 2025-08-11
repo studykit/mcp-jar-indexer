@@ -41,7 +41,9 @@ class TestSearchFileNames:
     }
 
   @pytest.mark.asyncio
-  async def test_search_file_names_success(self, temp_storage: Path, mock_search_result: Dict[str, Any]) -> None:
+  async def test_search_file_names_success(
+    self, temp_storage: Path, mock_search_result: Dict[str, Any]
+  ) -> None:
     """Test successful file name search."""
     code_path: Path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -118,7 +120,9 @@ class TestSearchFileNames:
       assert result["status"] == "not_found"
 
   @pytest.mark.asyncio
-  async def test_search_file_names_start_path_not_found(self, temp_storage: Path) -> None:
+  async def test_search_file_names_start_path_not_found(
+    self, temp_storage: Path
+  ) -> None:
     """Test start path not found."""
     code_path: Path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -142,7 +146,9 @@ class TestSearchFileNames:
       assert result["status"] == "start_path_not_found"
 
   @pytest.mark.asyncio
-  async def test_search_file_names_start_path_not_directory(self, temp_storage: Path) -> None:
+  async def test_search_file_names_start_path_not_directory(
+    self, temp_storage: Path
+  ) -> None:
     """Test start path is not a directory."""
     code_path: Path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -168,7 +174,9 @@ class TestSearchFileNames:
       assert result["status"] == "start_path_not_directory"
 
   @pytest.mark.asyncio
-  async def test_handle_search_file_names_success(self, mock_search_result: Dict[str, Any]) -> None:
+  async def test_handle_search_file_names_success(
+    self, mock_search_result: Dict[str, Any]
+  ) -> None:
     """Test handle_search_file_names success case."""
     mock_result: Dict[str, Any] = {
       "status": "success",

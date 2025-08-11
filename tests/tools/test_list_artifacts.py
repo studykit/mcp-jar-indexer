@@ -545,7 +545,10 @@ class TestToolDefinition:
   def test_tool_metadata(self) -> None:
     """Test tool metadata is correct."""
     assert LIST_ARTIFACTS_TOOL.name == "list_artifacts"
-    assert LIST_ARTIFACTS_TOOL.description is not None and "List all artifacts" in LIST_ARTIFACTS_TOOL.description
+    assert (
+      LIST_ARTIFACTS_TOOL.description is not None
+      and "List all artifacts" in LIST_ARTIFACTS_TOOL.description
+    )
     assert LIST_ARTIFACTS_TOOL.inputSchema["type"] == "object"
 
   def test_tool_parameters(self) -> None:

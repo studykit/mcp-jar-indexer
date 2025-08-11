@@ -286,22 +286,22 @@ class TestSearchFileContents:
   def sample_directory(self, tmp_path: Path) -> Path:
     """Create sample directory with files containing searchable content."""
     (tmp_path / "class1.java").write_text(
-      "package com.example;\n" +
-      "public class Test {\n" +
-      "    public void method() {\n" +
-      '        System.out.println("Hello World");\n' +
-      "    }\n" +
-      "}\n"
+      "package com.example;\n"
+      + "public class Test {\n"
+      + "    public void method() {\n"
+      + '        System.out.println("Hello World");\n'
+      + "    }\n"
+      + "}\n"
     )
 
     (tmp_path / "class2.java").write_text(
-      "package com.example;\n" +
-      "public class Utils {\n" +
-      '    private static final String HELLO = "Hello";\n' +
-      "    public String getGreeting() {\n" +
-      '        return HELLO + " World";\n' +
-      "    }\n" +
-      "}\n"
+      "package com.example;\n"
+      + "public class Utils {\n"
+      + '    private static final String HELLO = "Hello";\n'
+      + "    public String getGreeting() {\n"
+      + '        return HELLO + " World";\n'
+      + "    }\n"
+      + "}\n"
     )
 
     (tmp_path / "readme.txt").write_text(
