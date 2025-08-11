@@ -41,32 +41,37 @@ Based on `spec/dev/index_artifact/phase_1/design_spec.md`, this TODO organizes i
 ## Phase 3: Source Extraction Layer
 
 ### 3.1 Archive Operations
-- [ ] `extract_jar_source(jar_path, target_dir) -> None`
+- [x] `extract_jar_source(jar_path, target_dir) -> None`
   - JAR file extraction
   - Depends on: `normalize_path`
   - **Used by**: `index_artifact` for JAR sources
+  - **Status**: ✅ Implemented in source_extraction.py with comprehensive tests
 
-- [ ] `compress_directory_to_7z(source_dir, target_7z_path) -> None`
+- [x] `compress_directory_to_7z(source_dir, target_7z_path) -> None`
   - Directory compression to 7z
   - Depends on: `normalize_path`
   - **Used by**: Directory source storage
+  - **Status**: ✅ Implemented in source_extraction.py with comprehensive tests
 
-- [ ] `extract_7z_source(archive_path, target_dir) -> None`
+- [x] `extract_7z_source(archive_path, target_dir) -> None`
   - 7z archive extraction
   - Depends on: `normalize_path`
   - **Used by**: `index_artifact` for directory sources
+  - **Status**: ✅ Implemented in source_extraction.py with comprehensive tests
 
 ### 3.2 Directory Operations
-- [ ] `copy_directory_source(source_dir, target_dir) -> None`
+- [x] `copy_directory_source(source_dir, target_dir) -> None`
   - Recursive directory copying
   - Depends on: `normalize_path`
   - **Used by**: Directory source processing
+  - **Status**: ✅ Implemented in source_extraction.py with comprehensive tests
 
 ### 3.3 Git Operations
-- [ ] `create_git_worktree(bare_repo_path, target_dir, git_ref) -> None`
+- [x] `create_git_worktree(bare_repo_path, target_dir, git_ref) -> None`
   - Git worktree creation
   - Depends on: `normalize_path`
   - **Used by**: `index_artifact` for Git sources
+  - **Status**: ✅ Implemented in source_extraction.py with comprehensive tests
 
 ## Phase 4: Artifact State Management
 
@@ -142,7 +147,7 @@ Based on `spec/dev/index_artifact/phase_1/design_spec.md`, this TODO organizes i
 
 ## Implementation Status
 
-### ✅ COMPLETED (8/32 functions)
+### ✅ COMPLETED (13/32 functions)
 **High Priority (Core Dependencies):**
 1. ✅ **Phase 1: Foundation utilities** (3/3 functions completed)
    - `validate_maven_coordinates` ✅
@@ -152,15 +157,21 @@ Based on `spec/dev/index_artifact/phase_1/design_spec.md`, this TODO organizes i
 2. ✅ **Phase 2: File system basics** (2/2 functions completed)
    - `get_file_info` ✅
    - `get_artifact_code_path` ✅
+
+3. ✅ **Phase 3: Source extraction** (5/5 functions completed)
+   - `extract_jar_source` ✅
+   - `compress_directory_to_7z` ✅
+   - `extract_7z_source` ✅
+   - `copy_directory_source` ✅
+   - `create_git_worktree` ✅
    
-3. ✅ **Phase 4: Artifact state management** (3/3 functions completed)
+4. ✅ **Phase 4: Artifact state management** (3/3 functions completed)
    - `is_artifact_code_available` ✅
    - `is_artifact_code_indexed` ✅
    - `get_registered_source_info` ✅
 
-### 🚧 REMAINING (24/32 functions)
+### 🚧 REMAINING (19/32 functions)
 **Medium Priority (Feature Implementation):**
-4. ⏳ **Phase 3: Source extraction** (0/5 functions completed)
 5. ⏳ **Phase 5: Core file operations** (0/4 functions completed)
 
 **Final Priority (Interface Layer):**

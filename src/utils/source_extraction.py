@@ -1,12 +1,12 @@
 """Source extraction and copying utilities."""
 
 import shutil
-import subprocess
 import zipfile
 from pathlib import Path
 from typing import Dict, Any
 import git
 from git.exc import GitCommandError, InvalidGitRepositoryError, BadName
+import py7zr
 
 
 class GitRefNotFoundError(Exception):
@@ -101,23 +101,21 @@ def compress_directory_to_7z(source_dir: str, target_7z_path: str) -> None:
   target_path.parent.mkdir(parents=True, exist_ok=True)
 
   try:
-    # Use 7z command to compress
-    result = subprocess.run(
-      ["7z", "a", "-t7z", str(target_path), f"{source_path}/*"],
-      check=True,
-      capture_output=True,
-      text=True,
-    )
+    # Use py7zr to compress directory
+    with py7zr.SevenZipFile(target_path, mode="w") as archive:
+      # Add all files and directories recursively
+      for item in source_path.rglob("*"):
+        if item.is_file():
+          # Calculate relative path from source directory
+          relative_path = item.relative_to(source_path)
+          archive.write(item, str(relative_path))
 
-    if result.returncode != 0:
-      raise RuntimeError(f"7z compression failed: {result.stderr}")
-
-  except FileNotFoundError as e:
-    raise RuntimeError("7z command not found. Please install 7-Zip.") from e
-  except subprocess.CalledProcessError as e:
-    raise RuntimeError(f"7z compression process failed: {e.stderr}") from e
   except PermissionError as e:
     raise PermissionError(f"Permission error during compression: {str(e)}") from e
+  except OSError as e:
+    raise RuntimeError(f"7z compression failed: {str(e)}") from e
+  except Exception as e:
+    raise RuntimeError(f"7z compression process failed: {str(e)}") from e
 
 
 def extract_7z_source(archive_path: str, target_dir: str) -> None:
@@ -142,23 +140,18 @@ def extract_7z_source(archive_path: str, target_dir: str) -> None:
   target_path.mkdir(parents=True, exist_ok=True)
 
   try:
-    # Use 7z command to extract
-    result = subprocess.run(
-      ["7z", "x", str(archive_file), f"-o{target_path}"],
-      check=True,
-      capture_output=True,
-      text=True,
-    )
+    # Use py7zr to extract archive
+    with py7zr.SevenZipFile(archive_file, mode="r") as archive:
+      archive.extractall(path=target_path)
 
-    if result.returncode != 0:
-      raise RuntimeError(f"7z extraction failed: {result.stderr}")
-
-  except FileNotFoundError as e:
-    raise RuntimeError("7z command not found. Please install 7-Zip.") from e
-  except subprocess.CalledProcessError as e:
-    raise RuntimeError(f"7z extraction process failed: {e.stderr}") from e
   except PermissionError as e:
     raise PermissionError(f"Permission error during extraction: {str(e)}") from e
+  except py7zr.Bad7zFile as e:
+    raise RuntimeError(f"Invalid 7z file format: {archive_path} - {str(e)}") from e
+  except OSError as e:
+    raise RuntimeError(f"7z extraction failed: {str(e)}") from e
+  except Exception as e:
+    raise RuntimeError(f"7z extraction process failed: {str(e)}") from e
 
 
 def create_git_worktree(bare_repo_path: str, target_dir: str, git_ref: str) -> None:

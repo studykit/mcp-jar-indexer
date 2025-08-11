@@ -294,40 +294,68 @@ class TestGitFunctions:
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
 
-  @patch("src.utils.source_extraction.subprocess.run")
-  def test_compress_directory_to_7z_success(self, mock_run, temp_dir: Path) -> None:
+  def test_compress_directory_to_7z_success(self, temp_dir: Path) -> None:
     """Test 7z compression success."""
     from src.utils.source_extraction import compress_directory_to_7z
 
     source_dir = temp_dir / "source"
     source_dir.mkdir()
-    (source_dir / "file.txt").write_text("content")
+    (source_dir / "file.txt").write_text("test content")
+    (source_dir / "subdir").mkdir()
+    (source_dir / "subdir" / "nested.txt").write_text("nested content")
 
     target_7z = temp_dir / "archive.7z"
 
-    # Mock successful 7z command
-    mock_run.return_value.returncode = 0
-
     compress_directory_to_7z(str(source_dir), str(target_7z))
 
-    mock_run.assert_called_once()
+    # Verify the 7z file was created
+    assert target_7z.exists()
+    assert target_7z.stat().st_size > 0
 
-  @patch("src.utils.source_extraction.subprocess.run")
-  def test_extract_7z_source_success(self, mock_run, temp_dir: Path) -> None:
+  def test_extract_7z_source_success(self, temp_dir: Path) -> None:
     """Test 7z extraction success."""
-    from src.utils.source_extraction import extract_7z_source
+    from src.utils.source_extraction import compress_directory_to_7z, extract_7z_source
+
+    # First create a test archive
+    source_dir = temp_dir / "source"
+    source_dir.mkdir()
+    (source_dir / "file.txt").write_text("test content")
+    (source_dir / "subdir").mkdir()
+    (source_dir / "subdir" / "nested.txt").write_text("nested content")
 
     archive_path = temp_dir / "archive.7z"
-    archive_path.touch()  # Create dummy file
+    compress_directory_to_7z(str(source_dir), str(archive_path))
 
+    # Now extract it
     target_dir = temp_dir / "extracted"
-
-    # Mock successful 7z command
-    mock_run.return_value.returncode = 0
-
     extract_7z_source(str(archive_path), str(target_dir))
 
-    mock_run.assert_called_once()
+    # Verify extraction
+    assert target_dir.exists()
+    assert (target_dir / "file.txt").exists()
+    assert (target_dir / "file.txt").read_text() == "test content"
+    assert (target_dir / "subdir" / "nested.txt").exists()
+    assert (target_dir / "subdir" / "nested.txt").read_text() == "nested content"
+
+  def test_compress_directory_to_7z_nonexistent_source(self, temp_dir: Path) -> None:
+    """Test compression with nonexistent source directory."""
+    from src.utils.source_extraction import compress_directory_to_7z
+
+    nonexistent_dir = temp_dir / "nonexistent"
+    target_7z = temp_dir / "archive.7z"
+
+    with pytest.raises(FileNotFoundError, match="Source directory does not exist"):
+      compress_directory_to_7z(str(nonexistent_dir), str(target_7z))
+
+  def test_extract_7z_source_nonexistent_archive(self, temp_dir: Path) -> None:
+    """Test extraction with nonexistent archive."""
+    from src.utils.source_extraction import extract_7z_source
+
+    nonexistent_archive = temp_dir / "nonexistent.7z"
+    target_dir = temp_dir / "extracted"
+
+    with pytest.raises(FileNotFoundError, match="7z file does not exist"):
+      extract_7z_source(str(nonexistent_archive), str(target_dir))
 
   @patch("src.utils.source_extraction.git.Repo")
   def test_create_git_worktree_success(self, mock_repo_class, temp_dir: Path) -> None:
