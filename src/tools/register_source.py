@@ -15,7 +15,8 @@ from ..core.git_handler import (
 )
 from ..core.source_processor import SourceProcessor
 from ..core.storage import StorageManager
-from ..utils.file_utils import download_file, validate_jar_file, safe_copy_tree
+from ..utils.download_utils import download_file, validate_jar_file
+from ..utils.source_extraction import safe_copy_tree
 from ..utils.validation import validate_maven_coordinates, validate_uri_format
 
 logger = logging.getLogger(__name__)

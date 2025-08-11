@@ -5,60 +5,113 @@ and parameter types used throughout the JAR Indexer system.
 """
 
 import re
-from typing import Any, Optional
-from urllib.parse import urlparse
+from typing import Any
+from urllib.parse import urlparse, ParseResult
 
 
-def validate_maven_coordinates(
-  group_id: str, artifact_id: str, version: Optional[str] = None
-) -> bool:
-  """Validate Maven coordinate components.
+def validate_maven_coordinates(group_id: str, artifact_id: str, version: str) -> bool:
+  """Validate Maven coordinates for safe file system path generation.
+
+  Core Purpose: All Maven coordinate usage functions create file system paths using:
+  - code/{group_id}/{artifact_id}/{version}/
+  - source-jar/{group_id}/{artifact_id}/{version}/
+  - git-bare/{group_id}/{artifact_id}/
+
+  This validation ensures security and compatibility.
+
+  Validation Items:
+  1. Directory traversal attack prevention: Block ../, ./, ~ etc
+  2. File system compatibility: Block invalid chars for Windows/Linux/macOS
+  3. Path length limits: Prevent file system errors from long coordinates
+  4. Empty values and whitespace handling: Reject empty/null/whitespace-only values
 
   Args:
       group_id: Maven group ID (e.g., 'org.springframework')
       artifact_id: Maven artifact ID (e.g., 'spring-core')
-      version: Maven version (e.g., '5.3.21'), optional
+      version: Maven version (e.g., '5.3.21')
 
   Returns:
-      True if coordinates are valid
+      True if coordinates are safe for file system path generation
 
   Raises:
-      ValueError: If any coordinate component is invalid
+      ValueError: If any coordinate component is unsafe
   """
-  # Validate group_id
+  # Check for empty/null values
   if not group_id or not isinstance(group_id, str):
     raise ValueError("group_id must be a non-empty string")
-
-  # Group ID pattern: lowercase letters, numbers, dots, and hyphens
-  # Must start with lowercase letter or number
-  group_pattern = r"^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$"
-  if not re.match(group_pattern, group_id):
-    raise ValueError(
-      f"Invalid group_id format: {group_id}. Must contain only lowercase letters, numbers, dots, underscores, and hyphens"
-    )
-
-  # Validate artifact_id
   if not artifact_id or not isinstance(artifact_id, str):
     raise ValueError("artifact_id must be a non-empty string")
+  if not version or not isinstance(version, str):
+    raise ValueError("version must be a non-empty string")
 
-  # Artifact ID pattern: lowercase letters, numbers, dots, hyphens, and underscores
-  artifact_pattern = r"^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$"
-  if not re.match(artifact_pattern, artifact_id):
+  # Strip and check for whitespace-only values
+  group_id = group_id.strip()
+  artifact_id = artifact_id.strip()
+  version = version.strip()
+
+  if not group_id:
+    raise ValueError("group_id cannot be empty or whitespace only")
+  if not artifact_id:
+    raise ValueError("artifact_id cannot be empty or whitespace only")
+  if not version:
+    raise ValueError("version cannot be empty or whitespace only")
+
+  # Directory traversal attack prevention
+  dangerous_patterns = ["../", "./", "~", "..", "//"]
+  for coord in [group_id, artifact_id, version]:
+    for pattern in dangerous_patterns:
+      if pattern in coord:
+        raise ValueError(
+          f"Coordinate contains dangerous path traversal pattern '{pattern}': {coord}"
+        )
+
+  # File system compatibility - block invalid characters
+  # Windows/Linux/macOS invalid chars: / \ : * ? " < > |
+  invalid_chars = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
+  for coord_name, coord in [
+    ("group_id", group_id),
+    ("artifact_id", artifact_id),
+    ("version", version),
+  ]:
+    for char in invalid_chars:
+      if char in coord:
+        raise ValueError(
+          f"{coord_name} contains invalid file system character '{char}': {coord}"
+        )
+
+  # Path length limits (prevent extremely long paths)
+  max_component_length = 100
+  for coord_name, coord in [
+    ("group_id", group_id),
+    ("artifact_id", artifact_id),
+    ("version", version),
+  ]:
+    if len(coord) > max_component_length:
+      raise ValueError(
+        f"{coord_name} is too long (max {max_component_length} chars): {len(coord)} chars"
+      )
+
+  # Total path length check (conservative estimate)
+  total_length = (
+    len(group_id) + len(artifact_id) + len(version) + 20
+  )  # +20 for separators and margins
+  max_total_length = 250  # Conservative limit for most file systems
+  if total_length > max_total_length:
     raise ValueError(
-      f"Invalid artifact_id format: {artifact_id}. Must contain only lowercase letters, numbers, dots, underscores, and hyphens"
+      f"Combined Maven coordinates too long (max {max_total_length} chars): {total_length} chars"
     )
 
-  # Validate version if provided
-  if version is not None:
-    if not isinstance(version, str) or not version:
-      raise ValueError("version must be a non-empty string when provided")
-
-    # Version can be more flexible, allowing alphanumeric, dots, hyphens, and underscores
-    # Examples: 5.3.21, 1.0-SNAPSHOT, 2.0.0-M1, main, develop
-    version_pattern = r"^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?$"
-    if not re.match(version_pattern, version):
+  # Basic format validation - allow only safe characters
+  # Allow: letters, numbers, dots, hyphens, underscores
+  safe_pattern = r"^[a-zA-Z0-9._-]+$"
+  for coord_name, coord in [
+    ("group_id", group_id),
+    ("artifact_id", artifact_id),
+    ("version", version),
+  ]:
+    if not re.match(safe_pattern, coord):
       raise ValueError(
-        f"Invalid version format: {version}. Must contain only letters, numbers, dots, underscores, and hyphens"
+        f"{coord_name} contains invalid characters. Only letters, numbers, dots, underscores, and hyphens allowed: {coord}"
       )
 
   return True
@@ -114,7 +167,7 @@ def _validate_ssh_git_uri(uri: str) -> bool:
   return True
 
 
-def _validate_file_uri(parsed) -> bool:
+def _validate_file_uri(parsed: ParseResult) -> bool:
   """Validate file:// URI format"""
   if not parsed.path:
     raise ValueError("file:// URI must have a path")
@@ -126,7 +179,7 @@ def _validate_file_uri(parsed) -> bool:
   return True
 
 
-def _validate_http_uri(parsed) -> bool:
+def _validate_http_uri(parsed: ParseResult) -> bool:
   """Validate http/https URI format"""
   if not parsed.netloc:
     raise ValueError("HTTP/HTTPS URI must have a hostname")

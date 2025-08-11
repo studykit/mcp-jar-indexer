@@ -1,4 +1,4 @@
-"""Tests for Phase 1 basic utility functions."""
+"""Tests for utility functions from path_utils, artifact_utils, and filesystem_exploration modules."""
 
 import os
 import tempfile
@@ -7,15 +7,14 @@ from unittest.mock import patch
 
 import pytest
 
-from src.utils.file_utils import (
-  calculate_directory_depth,
+from src.utils.path_utils import calculate_directory_depth, normalize_path
+from src.utils.artifact_utils import (
   get_artifact_code_path,
-  get_file_info,
   get_registered_source_info,
   is_artifact_code_available,
   is_artifact_code_indexed,
-  normalize_path,
 )
+from src.utils.filesystem_exploration import get_file_info
 
 
 class TestNormalizePath:
