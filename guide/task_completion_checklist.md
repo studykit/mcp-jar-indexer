@@ -7,9 +7,13 @@
 # Always run both linting and formatting
 uv run ruff check
 uv run ruff format
+
+# Type checking with pyright
+uv run pyright
 ```
 - Fix any linting errors before considering task complete
 - Ensure code follows project formatting standards
+- Resolve all type checking errors and warnings
 
 ### 2. Testing Requirements
 ```bash
@@ -35,7 +39,7 @@ uv run pytest tests/core/ -v
 - Add or update docstrings for new/modified code
 
 ### 5. Pre-commit Validation
-- Run the combined quality check: `uv run ruff check && uv run ruff format`
+- Run the combined quality check: `uv run ruff check && uv run ruff format && uv run pyright`
 - Verify tests pass: `uv run pytest`
 - Check git status for untracked files that should be committed
 
@@ -45,7 +49,7 @@ uv run pytest tests/core/ -v
 - Check file permissions and directory creation logic
 
 ## Never Skip These Steps
-1. Linting and formatting checks
+1. Linting, formatting, and type checking
 2. Full test suite execution  
 3. Type hint validation
 4. Error handling verification

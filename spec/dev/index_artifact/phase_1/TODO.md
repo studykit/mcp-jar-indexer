@@ -97,27 +97,31 @@ Based on `spec/dev/index_artifact/phase_1/design_spec.md`, this TODO organizes i
 ## Phase 5: Core File System Operations
 
 ### 5.1 Directory Traversal
-- [ ] `list_directory_tree(base_path, start_path, max_depth, include_files) -> ListDirectoryTreeResult`
+- [x] `list_directory_tree(base_path, start_path, max_depth, include_files) -> ListDirectoryTreeResult`
   - Hierarchical directory listing
   - Depends on: `normalize_path`, `get_file_info`, `calculate_directory_depth`
   - **Used by**: `list_folder_tree` MCP tool
+  - **Status**: ✅ Implemented in filesystem_exploration.py
 
 ### 5.2 File Content Operations
-- [ ] `get_file_content(base_path, file_path, start_line, end_line) -> GetFileContentResult`
+- [x] `get_file_content(base_path, file_path, start_line, end_line) -> GetFileContentResult`
   - Read file content with optional line range
   - Depends on: `normalize_path`, `get_file_info`
   - **Used by**: `get_file` MCP tool
+  - **Status**: ✅ Implemented in filesystem_exploration.py
 
 ### 5.3 Search Operations
-- [ ] `search_files_by_pattern(base_path, pattern, pattern_type, start_path, max_depth) -> SearchFilesByPatternResult`
+- [x] `search_files_by_pattern(base_path, pattern, pattern_type, start_path, max_depth) -> SearchFilesByPatternResult`
   - File name pattern search
   - Depends on: `normalize_path`, `get_file_info`, `calculate_directory_depth`
   - **Used by**: `search_file_names` MCP tool
+  - **Status**: ✅ Implemented in filesystem_exploration.py
 
-- [ ] `search_file_contents(base_path, query, query_type, start_path, max_depth, context_before, context_after, max_results) -> SearchFileContentsResult`
+- [x] `search_file_contents(base_path, query, query_type, start_path, max_depth, context_before, context_after, max_results) -> SearchFileContentsResult`
   - File content search with context
   - Depends on: `normalize_path`, `calculate_directory_depth`
   - **Used by**: `search_file_content` MCP tool
+  - **Status**: ✅ Implemented in filesystem_exploration.py
 
 ## Phase 6: MCP Tool Layer
 
@@ -147,7 +151,7 @@ Based on `spec/dev/index_artifact/phase_1/design_spec.md`, this TODO organizes i
 
 ## Implementation Status
 
-### ✅ COMPLETED (13/32 functions)
+### ✅ COMPLETED (17/32 functions)
 **High Priority (Core Dependencies):**
 1. ✅ **Phase 1: Foundation utilities** (3/3 functions completed)
    - `validate_maven_coordinates` ✅
@@ -169,11 +173,14 @@ Based on `spec/dev/index_artifact/phase_1/design_spec.md`, this TODO organizes i
    - `is_artifact_code_available` ✅
    - `is_artifact_code_indexed` ✅
    - `get_registered_source_info` ✅
+   
+5. ✅ **Phase 5: Core file operations** (4/4 functions completed)
+   - `list_directory_tree` ✅
+   - `get_file_content` ✅
+   - `search_files_by_pattern` ✅
+   - `search_file_contents` ✅
 
-### 🚧 REMAINING (19/32 functions)
-**Medium Priority (Feature Implementation):**
-5. ⏳ **Phase 5: Core file operations** (0/4 functions completed)
-
+### 🚧 REMAINING (15/32 functions)
 **Final Priority (Interface Layer):**
 6. ⏳ **Phase 6: MCP tools** (0/5 functions completed)
 
