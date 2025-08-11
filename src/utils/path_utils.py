@@ -17,7 +17,7 @@ def normalize_path(path: str) -> str:
   Raises:
     ValueError: If path is empty or invalid
   """
-  if not path or not isinstance(path, str):
+  if not path:
     raise ValueError("Path must be a non-empty string")
 
   path = path.strip()

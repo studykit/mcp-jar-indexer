@@ -1,4 +1,4 @@
-"""Type definitions for JAR Indexer."""
+"""JAR Indexer type definitions."""
 
 from .core_types import (
   SearchMatch,

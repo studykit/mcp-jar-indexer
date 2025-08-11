@@ -4,7 +4,7 @@ import os
 import json
 from pathlib import Path
 
-from ..types.core_types import RegisteredSourceInfo
+from ..jartype.core_types import RegisteredSourceInfo
 from .validation import validate_maven_coordinates
 
 

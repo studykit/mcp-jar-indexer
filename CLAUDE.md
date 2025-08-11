@@ -16,6 +16,9 @@ uv sync && uv run pytest
 # Code quality check
 uv run ruff check && uv run ruff format
 
+# Type checking
+uv run pyright
+
 # Run application
 uv run python -m src.main
 ```

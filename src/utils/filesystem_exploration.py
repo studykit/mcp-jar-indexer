@@ -2,9 +2,9 @@
 
 import re
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
-from ..types.core_types import (
+from ..jartype.core_types import (
   FileInfo,
   FolderInfo,
   ListDirectoryTreeResult,
@@ -107,8 +107,8 @@ def list_directory_tree(
 
   def _build_folder_info(path: Path, current_depth: int) -> FolderInfo:
     """Build folder information recursively."""
-    files = []
-    folders = []
+    files: List[FileInfo] = []
+    folders: List[FolderInfo] = []
 
     if include_files:
       # Get files in current directory
@@ -140,8 +140,8 @@ def list_directory_tree(
     )
 
   # Build root level structure
-  root_files = []
-  root_folders = []
+  root_files: List[FileInfo] = []
+  root_folders: List[FolderInfo] = []
 
   if include_files:
     for item in start.iterdir():
@@ -366,7 +366,7 @@ def search_file_contents(
     except (UnicodeDecodeError, OSError):
       return
 
-    file_matches = []
+    file_matches: List[SearchMatch] = []
 
     for line_num, line in enumerate(lines, 1):
       if max_results is not None and total_results >= max_results:
@@ -395,7 +395,7 @@ def search_file_contents(
         end_line = min(len(lines), line_num + context_after)
 
         # Get context lines
-        context_lines = []
+        context_lines: List[str] = []
         for i in range(start_line - 1, end_line):
           context_lines.append(f"{i + 1:4d}: {lines[i]}")
 

@@ -37,11 +37,11 @@ def validate_maven_coordinates(group_id: str, artifact_id: str, version: str) ->
       ValueError: If any coordinate component is unsafe
   """
   # Check for empty/null values
-  if not group_id or not isinstance(group_id, str):
+  if not group_id:
     raise ValueError("group_id must be a non-empty string")
-  if not artifact_id or not isinstance(artifact_id, str):
+  if not artifact_id:
     raise ValueError("artifact_id must be a non-empty string")
-  if not version or not isinstance(version, str):
+  if not version:
     raise ValueError("version must be a non-empty string")
 
   # Strip and check for whitespace-only values
@@ -129,7 +129,7 @@ def validate_uri_format(uri: str) -> bool:
   Raises:
       ValueError: If URI format is invalid
   """
-  if not uri or not isinstance(uri, str):
+  if not uri:
     raise ValueError("URI must be a non-empty string")
 
   # Handle SSH Git format: git@host:user/repo
@@ -242,7 +242,7 @@ def validate_git_ref(git_ref: str) -> bool:
   Raises:
       ValueError: If git_ref format is invalid
   """
-  if not git_ref or not isinstance(git_ref, str):
+  if not git_ref:
     raise ValueError("git_ref must be a non-empty string")
 
   git_ref = git_ref.strip()

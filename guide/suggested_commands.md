@@ -15,6 +15,20 @@ uv add <package-name>
 uv add --group dev <package-name>
 ```
 
+## Type Checking Commands
+```bash
+# Run pyright type checking on entire project
+uv run pyright
+
+# Run pyright on specific file or directory
+uv run pyright src/types/
+uv run pyright src/utils/validation.py
+
+# Run pyright with different output formats
+uv run pyright --outputjson    # JSON output for tools
+uv run pyright --stats         # Show type checking statistics
+```
+
 ## Testing Commands
 ```bash
 # Run all tests

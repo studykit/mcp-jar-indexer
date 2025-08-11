@@ -86,6 +86,7 @@ line-ending = "auto"
 [dependency-groups]
 dev = [
     "mypy>=1.17.1",
+    "pyright>=1.1.350",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
     "ruff>=0.12.8",
