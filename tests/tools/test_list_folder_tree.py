@@ -3,6 +3,7 @@
 import json
 import tempfile
 from pathlib import Path
+from typing import Any, Dict, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,13 +15,13 @@ class TestListFolderTree:
   """Test cases for list_folder_tree functionality."""
 
   @pytest.fixture
-  def temp_storage(self):
+  def temp_storage(self) -> Generator[Path, None, None]:
     """Create temporary storage directory."""
     with tempfile.TemporaryDirectory() as temp_dir:
       yield Path(temp_dir)
 
   @pytest.fixture
-  def mock_directory_tree_result(self):
+  def mock_directory_tree_result(self) -> Dict[str, Any]:
     """Mock list_directory_tree result."""
     return {
       "path": "src",
@@ -44,13 +45,13 @@ class TestListFolderTree:
 
   @pytest.mark.asyncio
   async def test_list_folder_tree_success(
-    self, temp_storage, mock_directory_tree_result
-  ):
+    self, temp_storage: Path, mock_directory_tree_result: Dict[str, Any]
+  ) -> None:
     """Test successful folder tree listing."""
-    code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
+    code_path: Path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
     # Create the src directory that the test is looking for
-    src_path = code_path / "src"
+    src_path: Path = code_path / "src"
     src_path.mkdir(exist_ok=True)
 
     with (
@@ -61,7 +62,7 @@ class TestListFolderTree:
         "src.tools.list_folder_tree.list_directory_tree",
         return_value=mock_directory_tree_result,
       ),
-      patch("src.tools.list_folder_tree.normalize_path", side_effect=lambda x: x),
+      patch("src.tools.list_folder_tree.normalize_path", return_value="src"),
     ):
       mock_storage = MagicMock()
       mock_storage.get_code_path = MagicMock(return_value=code_path)
@@ -78,7 +79,7 @@ class TestListFolderTree:
       assert len(result["files"]) == 1
 
   @pytest.mark.asyncio
-  async def test_list_folder_tree_not_indexed(self):
+  async def test_list_folder_tree_not_indexed(self) -> None:
     """Test artifact not indexed case."""
     with (
       patch("src.tools.list_folder_tree.validate_maven_coordinates"),
@@ -93,7 +94,7 @@ class TestListFolderTree:
       assert result["files"] == []
 
   @pytest.mark.asyncio
-  async def test_list_folder_tree_not_found(self):
+  async def test_list_folder_tree_not_found(self) -> None:
     """Test artifact code directory not found."""
     with (
       patch("src.tools.list_folder_tree.validate_maven_coordinates"),
@@ -109,9 +110,9 @@ class TestListFolderTree:
       assert result["status"] == "not_found"
 
   @pytest.mark.asyncio
-  async def test_list_folder_tree_path_not_found(self, temp_storage):
+  async def test_list_folder_tree_path_not_found(self, temp_storage: Path) -> None:
     """Test requested path not found."""
-    code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
+    code_path: Path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
 
     with (
@@ -129,11 +130,11 @@ class TestListFolderTree:
       assert result["status"] == "path_not_found"
 
   @pytest.mark.asyncio
-  async def test_list_folder_tree_not_directory(self, temp_storage):
+  async def test_list_folder_tree_not_directory(self, temp_storage: Path) -> None:
     """Test requested path is not a directory."""
-    code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
+    code_path: Path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
-    file_path = code_path / "test.txt"
+    file_path: Path = code_path / "test.txt"
     file_path.write_text("test content")
 
     with (
@@ -151,9 +152,9 @@ class TestListFolderTree:
       assert result["status"] == "not_directory"
 
   @pytest.mark.asyncio
-  async def test_handle_list_folder_tree_success(self, mock_directory_tree_result):
+  async def test_handle_list_folder_tree_success(self, mock_directory_tree_result: Dict[str, Any]) -> None:
     """Test handle_list_folder_tree success case."""
-    mock_result = {
+    mock_result: Dict[str, Any] = {
       "status": "success",
       "path": "src",
       "max_depth": 3,
@@ -179,7 +180,7 @@ class TestListFolderTree:
       assert response_data["path"] == "src"
 
   @pytest.mark.asyncio
-  async def test_handle_list_folder_tree_exception(self):
+  async def test_handle_list_folder_tree_exception(self) -> None:
     """Test handle_list_folder_tree exception handling."""
     with patch(
       "src.tools.list_folder_tree.list_folder_tree", side_effect=Exception("Test error")

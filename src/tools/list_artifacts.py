@@ -138,7 +138,7 @@ def get_artifact_status(
     # Only add source-dir if no JAR or Git source exists
     has_jar = source_jar_path.exists() and any(source_jar_path.glob("*.jar"))
     has_git = git_bare_path.exists() and git_bare_path.is_dir()
-    
+
     if not has_jar and not has_git:
       # Check if it has content
       try:

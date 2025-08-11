@@ -2,6 +2,7 @@
 
 import tempfile
 from pathlib import Path
+from typing import Iterator
 import pytest
 
 from src.utils.path_utils import (
@@ -83,7 +84,7 @@ class TestEnsureDirectory:
   """Test ensure_directory function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)

@@ -1,6 +1,7 @@
 """Tests for list_artifacts MCP tool."""
 
 import json
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -20,37 +21,37 @@ from src.core.storage import StorageManager
 class TestParseVersionFilter:
   """Test version filter parsing."""
 
-  def test_exact_version(self):
+  def test_exact_version(self) -> None:
     """Test parsing exact version."""
     constraints = parse_version_filter("5.3.21")
     assert constraints == [("==", "5.3.21")]
 
-  def test_greater_than(self):
+  def test_greater_than(self) -> None:
     """Test parsing greater than constraint."""
     constraints = parse_version_filter(">5.3.0")
     assert constraints == [(">", "5.3.0")]
 
-  def test_greater_than_or_equal(self):
+  def test_greater_than_or_equal(self) -> None:
     """Test parsing greater than or equal constraint."""
     constraints = parse_version_filter(">=5.3.0")
     assert constraints == [(">=", "5.3.0")]
 
-  def test_less_than(self):
+  def test_less_than(self) -> None:
     """Test parsing less than constraint."""
     constraints = parse_version_filter("<6.0.0")
     assert constraints == [("<", "6.0.0")]
 
-  def test_less_than_or_equal(self):
+  def test_less_than_or_equal(self) -> None:
     """Test parsing less than or equal constraint."""
     constraints = parse_version_filter("<=6.0.0")
     assert constraints == [("<=", "6.0.0")]
 
-  def test_multiple_constraints(self):
+  def test_multiple_constraints(self) -> None:
     """Test parsing multiple constraints."""
     constraints = parse_version_filter(">=5.0.0,<6.0.0")
     assert constraints == [(">=", "5.0.0"), ("<", "6.0.0")]
 
-  def test_with_equals_sign(self):
+  def test_with_equals_sign(self) -> None:
     """Test parsing with explicit equals sign."""
     constraints = parse_version_filter("=5.3.21")
     assert constraints == [("==", "5.3.21")]
@@ -59,48 +60,48 @@ class TestParseVersionFilter:
 class TestCheckVersionConstraint:
   """Test version constraint checking."""
 
-  def test_exact_match(self):
+  def test_exact_match(self) -> None:
     """Test exact version match."""
     constraints = [("==", "5.3.21")]
     assert check_version_constraint("5.3.21", constraints) is True
     assert check_version_constraint("5.3.20", constraints) is False
 
-  def test_greater_than(self):
+  def test_greater_than(self) -> None:
     """Test greater than constraint."""
     constraints = [(">", "5.3.0")]
     assert check_version_constraint("5.3.1", constraints) is True
     assert check_version_constraint("5.3.0", constraints) is False
     assert check_version_constraint("5.2.9", constraints) is False
 
-  def test_greater_than_or_equal(self):
+  def test_greater_than_or_equal(self) -> None:
     """Test greater than or equal constraint."""
     constraints = [(">=", "5.3.0")]
     assert check_version_constraint("5.3.0", constraints) is True
     assert check_version_constraint("5.3.1", constraints) is True
     assert check_version_constraint("5.2.9", constraints) is False
 
-  def test_less_than(self):
+  def test_less_than(self) -> None:
     """Test less than constraint."""
     constraints = [("<", "6.0.0")]
     assert check_version_constraint("5.9.9", constraints) is True
     assert check_version_constraint("6.0.0", constraints) is False
     assert check_version_constraint("6.0.1", constraints) is False
 
-  def test_less_than_or_equal(self):
+  def test_less_than_or_equal(self) -> None:
     """Test less than or equal constraint."""
     constraints = [("<=", "6.0.0")]
     assert check_version_constraint("6.0.0", constraints) is True
     assert check_version_constraint("5.9.9", constraints) is True
     assert check_version_constraint("6.0.1", constraints) is False
 
-  def test_multiple_constraints(self):
+  def test_multiple_constraints(self) -> None:
     """Test multiple constraints."""
     constraints = [(">=", "5.0.0"), ("<", "6.0.0")]
     assert check_version_constraint("5.5.0", constraints) is True
     assert check_version_constraint("4.9.9", constraints) is False
     assert check_version_constraint("6.0.0", constraints) is False
 
-  def test_non_semver_version(self):
+  def test_non_semver_version(self) -> None:
     """Test with non-semantic version strings."""
     constraints = [("==", "4.1.79.Final")]
     assert check_version_constraint("4.1.79.Final", constraints) is True
@@ -110,7 +111,7 @@ class TestCheckVersionConstraint:
 class TestGetArtifactStatus:
   """Test artifact status determination."""
 
-  def test_no_source(self, tmp_path):
+  def test_no_source(self, tmp_path: Path) -> None:
     """Test status when no source exists."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -118,7 +119,7 @@ class TestGetArtifactStatus:
     status = get_artifact_status(storage_manager, "org.test", "test-artifact", "1.0.0")
     assert status == ""
 
-  def test_jar_source_only(self, tmp_path):
+  def test_jar_source_only(self, tmp_path: Path) -> None:
     """Test status with JAR source only."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -131,7 +132,7 @@ class TestGetArtifactStatus:
     status = get_artifact_status(storage_manager, "org.test", "test-artifact", "1.0.0")
     assert status == "source-jar"
 
-  def test_indexed_source(self, tmp_path):
+  def test_indexed_source(self, tmp_path: Path) -> None:
     """Test status with indexed source."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -150,7 +151,7 @@ class TestGetArtifactStatus:
     assert "source-jar" in status
     # Note: 'index' status is not available in Phase 1 implementation
 
-  def test_file_searchable_source(self, tmp_path):
+  def test_file_searchable_source(self, tmp_path: Path) -> None:
     """Test status with file-searchable source code."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -171,7 +172,7 @@ class TestGetArtifactStatus:
     assert "file-searchable" in status
     # Note: 'index' status is not available in Phase 1 implementation
 
-  def test_git_source(self, tmp_path):
+  def test_git_source(self, tmp_path: Path) -> None:
     """Test status with Git source."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -194,7 +195,7 @@ class TestGetArtifactStatus:
 class TestScanAllArtifacts:
   """Test scanning all artifacts."""
 
-  def test_scan_empty_storage(self, tmp_path):
+  def test_scan_empty_storage(self, tmp_path: Path) -> None:
     """Test scanning empty storage."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -202,7 +203,7 @@ class TestScanAllArtifacts:
     artifacts = scan_all_artifacts(storage_manager)
     assert artifacts == []
 
-  def test_scan_jar_artifacts(self, tmp_path):
+  def test_scan_jar_artifacts(self, tmp_path: Path) -> None:
     """Test scanning JAR artifacts."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -226,7 +227,7 @@ class TestScanAllArtifacts:
     assert ("org.test", "artifact1", "1.0.0") in artifact_coords
     assert ("org.test", "artifact2", "2.0.0") in artifact_coords
 
-  def test_scan_git_artifacts(self, tmp_path):
+  def test_scan_git_artifacts(self, tmp_path: Path) -> None:
     """Test scanning Git artifacts."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -255,7 +256,7 @@ class TestScanAllArtifacts:
     assert ("org.test", "git-artifact", "1.0.0") in artifact_coords
     assert ("org.test", "git-artifact", "2.0.0") in artifact_coords
 
-  def test_scan_no_duplicates(self, tmp_path):
+  def test_scan_no_duplicates(self, tmp_path: Path) -> None:
     """Test that scanning doesn't create duplicates."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -280,7 +281,7 @@ class TestListArtifacts:
   """Test list_artifacts function."""
 
   @pytest.mark.asyncio
-  async def test_list_all_artifacts(self, tmp_path):
+  async def test_list_all_artifacts(self, tmp_path: Path) -> None:
     """Test listing all artifacts without filters."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -304,7 +305,7 @@ class TestListArtifacts:
       assert len(result["artifacts"]) == 2
 
   @pytest.mark.asyncio
-  async def test_list_with_group_filter(self, tmp_path):
+  async def test_list_with_group_filter(self, tmp_path: Path) -> None:
     """Test listing with group filter."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -329,7 +330,7 @@ class TestListArtifacts:
       assert result["artifacts"][0]["group_id"] == "org.test"
 
   @pytest.mark.asyncio
-  async def test_list_with_artifact_filter(self, tmp_path):
+  async def test_list_with_artifact_filter(self, tmp_path: Path) -> None:
     """Test listing with artifact filter."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -354,7 +355,7 @@ class TestListArtifacts:
       assert result["artifacts"][0]["artifact_id"] == "artifact1"
 
   @pytest.mark.asyncio
-  async def test_list_with_version_filter(self, tmp_path):
+  async def test_list_with_version_filter(self, tmp_path: Path) -> None:
     """Test listing with version filter."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -380,7 +381,7 @@ class TestListArtifacts:
       assert "2.5.0" not in versions
 
   @pytest.mark.asyncio
-  async def test_list_with_status_filter(self, tmp_path):
+  async def test_list_with_status_filter(self, tmp_path: Path) -> None:
     """Test listing with status filter."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -417,7 +418,7 @@ class TestListArtifacts:
       assert artifact2_found, "artifact2 with version 2.0.0 not found"
 
   @pytest.mark.asyncio
-  async def test_list_with_pagination(self, tmp_path):
+  async def test_list_with_pagination(self, tmp_path: Path) -> None:
     """Test listing with pagination."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -471,7 +472,7 @@ class TestHandleListArtifacts:
   """Test handle_list_artifacts MCP handler."""
 
   @pytest.mark.asyncio
-  async def test_handle_success(self, tmp_path):
+  async def test_handle_success(self, tmp_path: Path) -> None:
     """Test successful MCP tool call."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -493,7 +494,7 @@ class TestHandleListArtifacts:
       assert len(data["artifacts"]) == 1
 
   @pytest.mark.asyncio
-  async def test_handle_with_filters(self, tmp_path):
+  async def test_handle_with_filters(self, tmp_path: Path) -> None:
     """Test MCP tool call with filters."""
     storage_manager = StorageManager(str(tmp_path))
     storage_manager.ensure_directories()
@@ -541,13 +542,13 @@ class TestHandleListArtifacts:
 class TestToolDefinition:
   """Test MCP tool definition."""
 
-  def test_tool_metadata(self):
+  def test_tool_metadata(self) -> None:
     """Test tool metadata is correct."""
     assert LIST_ARTIFACTS_TOOL.name == "list_artifacts"
-    assert "List all artifacts" in LIST_ARTIFACTS_TOOL.description
+    assert LIST_ARTIFACTS_TOOL.description is not None and "List all artifacts" in LIST_ARTIFACTS_TOOL.description
     assert LIST_ARTIFACTS_TOOL.inputSchema["type"] == "object"
 
-  def test_tool_parameters(self):
+  def test_tool_parameters(self) -> None:
     """Test tool parameter definitions."""
     properties = LIST_ARTIFACTS_TOOL.inputSchema["properties"]
 
@@ -573,6 +574,6 @@ class TestToolDefinition:
     assert "status_filter" in properties
     assert properties["status_filter"]["type"] == "string"
 
-  def test_no_required_parameters(self):
+  def test_no_required_parameters(self) -> None:
     """Test that no parameters are required."""
     assert LIST_ARTIFACTS_TOOL.inputSchema["required"] == []

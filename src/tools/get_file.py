@@ -9,7 +9,6 @@ from ..core.storage import StorageManager
 from ..jartype.core_types import GetFileResult
 from ..utils.artifact_utils import is_artifact_code_available
 from ..utils.filesystem_exploration import get_file_content
-from ..utils.path_utils import normalize_path
 from ..utils.validation import validate_maven_coordinates
 
 logger = logging.getLogger(__name__)

@@ -3,6 +3,7 @@
 import json
 import tempfile
 from pathlib import Path
+from typing import Any, Dict, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -17,13 +18,13 @@ class TestSearchFileContent:
   """Test cases for search_file_content functionality."""
 
   @pytest.fixture
-  def temp_storage(self):
+  def temp_storage(self) -> Generator[Path, None, None]:
     """Create temporary storage directory."""
     with tempfile.TemporaryDirectory() as temp_dir:
       yield Path(temp_dir)
 
   @pytest.fixture
-  def mock_search_result(self):
+  def mock_search_result(self) -> Dict[str, Any]:
     """Mock search_file_contents result."""
     return {
       "search_config": {
@@ -52,7 +53,7 @@ class TestSearchFileContent:
     }
 
   @pytest.mark.asyncio
-  async def test_search_file_content_success(self, temp_storage, mock_search_result):
+  async def test_search_file_content_success(self, temp_storage: Path, mock_search_result: Dict[str, Any]):
     """Test successful file content search."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -61,16 +62,16 @@ class TestSearchFileContent:
     src_path.mkdir(exist_ok=True)
 
     with (
-      patch("src.tools.search_file_content.validate_maven_coordinates"),
+      patch("src.tools.search_file_content.validate_maven_coordinates") as _,
       patch(
         "src.tools.search_file_content.is_artifact_code_available", return_value=True
-      ),
+      ) as _,
       patch("src.tools.search_file_content.StorageManager") as mock_storage_class,
       patch(
         "src.tools.search_file_content.search_file_contents",
         return_value=mock_search_result,
-      ),
-      patch("src.tools.search_file_content.normalize_path", return_value="src"),
+      ) as _,
+      patch("src.tools.search_file_content.normalize_path", return_value="src") as _,
     ):
       mock_storage = MagicMock()
       mock_storage.get_code_path = MagicMock(return_value=code_path)
@@ -98,7 +99,7 @@ class TestSearchFileContent:
   async def test_search_file_content_invalid_query_type(self):
     """Test invalid query type case."""
     with (
-      patch("src.tools.search_file_content.validate_maven_coordinates"),
+      patch("src.tools.search_file_content.validate_maven_coordinates") as _,
     ):
       result = await search_file_content(
         "org.example", "test-lib", "1.0.0", "test", "invalid_type"
@@ -111,10 +112,10 @@ class TestSearchFileContent:
   async def test_search_file_content_not_indexed(self):
     """Test artifact not indexed case."""
     with (
-      patch("src.tools.search_file_content.validate_maven_coordinates"),
+      patch("src.tools.search_file_content.validate_maven_coordinates") as _,
       patch(
         "src.tools.search_file_content.is_artifact_code_available", return_value=False
-      ),
+      ) as _,
     ):
       result = await search_file_content("org.example", "test-lib", "1.0.0", "test")
 
@@ -125,10 +126,10 @@ class TestSearchFileContent:
   async def test_search_file_content_not_found(self):
     """Test artifact code directory not found."""
     with (
-      patch("src.tools.search_file_content.validate_maven_coordinates"),
+      patch("src.tools.search_file_content.validate_maven_coordinates") as _,
       patch(
         "src.tools.search_file_content.is_artifact_code_available", return_value=True
-      ),
+      ) as _,
       patch("src.tools.search_file_content.StorageManager") as mock_storage_class,
     ):
       mock_storage = MagicMock()
@@ -140,18 +141,18 @@ class TestSearchFileContent:
       assert result["status"] == "not_found"
 
   @pytest.mark.asyncio
-  async def test_search_file_content_start_path_not_found(self, temp_storage):
+  async def test_search_file_content_start_path_not_found(self, temp_storage: Path):
     """Test start path not found."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
 
     with (
-      patch("src.tools.search_file_content.validate_maven_coordinates"),
+      patch("src.tools.search_file_content.validate_maven_coordinates") as _,
       patch(
         "src.tools.search_file_content.is_artifact_code_available", return_value=True
-      ),
+      ) as _,
       patch("src.tools.search_file_content.StorageManager") as mock_storage_class,
-      patch("src.tools.search_file_content.normalize_path", return_value="nonexistent"),
+      patch("src.tools.search_file_content.normalize_path", return_value="nonexistent") as _,
     ):
       mock_storage = MagicMock()
       mock_storage.get_code_path = MagicMock(return_value=code_path)
@@ -164,7 +165,7 @@ class TestSearchFileContent:
       assert result["status"] == "start_path_not_found"
 
   @pytest.mark.asyncio
-  async def test_search_file_content_start_path_not_directory(self, temp_storage):
+  async def test_search_file_content_start_path_not_directory(self, temp_storage: Path):
     """Test start path is not a directory."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -172,12 +173,12 @@ class TestSearchFileContent:
     file_path.write_text("test content")
 
     with (
-      patch("src.tools.search_file_content.validate_maven_coordinates"),
+      patch("src.tools.search_file_content.validate_maven_coordinates") as _,
       patch(
         "src.tools.search_file_content.is_artifact_code_available", return_value=True
-      ),
+      ) as _,
       patch("src.tools.search_file_content.StorageManager") as mock_storage_class,
-      patch("src.tools.search_file_content.normalize_path", return_value="test.txt"),
+      patch("src.tools.search_file_content.normalize_path", return_value="test.txt") as _,
     ):
       mock_storage = MagicMock()
       mock_storage.get_code_path = MagicMock(return_value=code_path)
@@ -190,9 +191,9 @@ class TestSearchFileContent:
       assert result["status"] == "start_path_not_directory"
 
   @pytest.mark.asyncio
-  async def test_handle_search_file_content_success(self, mock_search_result):
+  async def test_handle_search_file_content_success(self, mock_search_result: Dict[str, Any]):
     """Test handle_search_file_content success case."""
-    mock_result = {
+    mock_result: Dict[str, Any] = {
       "status": "success",
       "search_config": mock_search_result["search_config"],
       "matches": mock_search_result["matches"],

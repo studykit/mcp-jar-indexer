@@ -3,7 +3,8 @@
 import os
 import json
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+from typing import Any
 import pytest
 
 from src.utils.artifact_utils import (
@@ -62,7 +63,7 @@ class TestIsArtifactCodeAvailable:
   @patch.dict(os.environ, {}, clear=True)
   @patch("os.path.expanduser")
   def test_is_artifact_code_available_default_home(
-    self, mock_expanduser, temp_jar_indexer_home: Path
+    self, mock_expanduser: MagicMock, temp_jar_indexer_home: Path
   ) -> None:
     """Test with default JAR_INDEXER_HOME."""
     mock_expanduser.return_value = str(temp_jar_indexer_home)
@@ -185,7 +186,7 @@ class TestIsArtifactCodeIndexed:
 
       # Create valid index.json
       index_file = index_dir / "index.json"
-      index_data = {"version": "1.0", "timestamp": "2024-01-01T00:00:00Z", "files": []}
+      index_data: dict[str, Any] = {"version": "1.0", "timestamp": "2024-01-01T00:00:00Z", "files": []}
       index_file.write_text(json.dumps(index_data))
 
       result = is_artifact_code_indexed("org.springframework", "spring-core", "5.3.21")

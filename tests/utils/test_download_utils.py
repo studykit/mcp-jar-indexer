@@ -3,6 +3,7 @@
 import zipfile
 import tempfile
 from pathlib import Path
+from typing import Iterator
 from unittest.mock import patch, Mock
 import pytest
 import requests
@@ -17,7 +18,7 @@ class TestDownloadFile:
   """Test download_file function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -87,7 +88,7 @@ class TestValidateJarFile:
   """Test validate_jar_file function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)

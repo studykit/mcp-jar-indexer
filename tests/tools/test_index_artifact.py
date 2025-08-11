@@ -3,10 +3,12 @@
 import json
 import tempfile
 from pathlib import Path
+from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from src.jartype.core_types import IndexArtifactResult, RegisteredSourceInfo
 from src.tools.index_artifact import handle_index_artifact, index_artifact
 
 
@@ -14,13 +16,13 @@ class TestIndexArtifact:
   """Test cases for index_artifact functionality."""
 
   @pytest.fixture
-  def temp_storage(self):
+  def temp_storage(self) -> Generator[Path, None, None]:
     """Create temporary storage directory."""
     with tempfile.TemporaryDirectory() as temp_dir:
       yield Path(temp_dir)
 
   @pytest.fixture
-  def mock_storage_manager(self, temp_storage):
+  def mock_storage_manager(self, temp_storage: Path) -> MagicMock:
     """Mock storage manager with temporary directory."""
     mock_manager = MagicMock()
     mock_manager.base_dir = temp_storage
@@ -35,22 +37,22 @@ class TestIndexArtifact:
     return mock_manager
 
   @pytest.fixture
-  def sample_registered_source_info(self):
+  def sample_registered_source_info(self) -> RegisteredSourceInfo:
     """Sample registered source info."""
-    return {
-      "group_id": "org.example",
-      "artifact_id": "test-lib",
-      "version": "1.0.0",
-      "source_uri": "file:///test/source.jar",
-      "git_ref": None,
-      "source_type": "jar",
-      "local_path": "source-jar/org/example/test-lib/1.0.0",
-    }
+    return RegisteredSourceInfo(
+      group_id="org.example",
+      artifact_id="test-lib",
+      version="1.0.0",
+      source_uri="file:///test/source.jar",
+      git_ref=None,
+      source_type="jar",
+      local_path="source-jar/org/example/test-lib/1.0.0",
+    )
 
   @pytest.mark.asyncio
   async def test_index_artifact_success_jar_source(
-    self, temp_storage, sample_registered_source_info
-  ):
+    self, temp_storage: Path, sample_registered_source_info: RegisteredSourceInfo
+  ) -> None:
     """Test successful artifact indexing with JAR source."""
     # Setup
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
@@ -75,7 +77,10 @@ class TestIndexArtifact:
         return_value=sample_registered_source_info,
       ),
       patch("src.tools.index_artifact.extract_jar_source") as mock_extract,
-      patch("src.tools.list_artifacts.get_artifact_status", return_value="source-jar,file-searchable"),
+      patch(
+        "src.tools.list_artifacts.get_artifact_status",
+        return_value="source-jar,file-searchable",
+      ),
     ):
       # Create the code path directory
       code_path.mkdir(parents=True, exist_ok=True)
@@ -90,19 +95,22 @@ class TestIndexArtifact:
       result = await index_artifact("org.example", "test-lib", "1.0.0")
 
       # Assertions
-      assert result["status"] == "source-jar,file-searchable"
-      assert result["cache_location"] == str(code_path)
+      assert result.get("status") == "source-jar,file-searchable"
+      assert result.get("cache_location") == str(code_path)
       assert "processing_time" in result
       mock_extract.assert_called_once()
 
   @pytest.mark.asyncio
-  async def test_index_artifact_already_available(self):
+  async def test_index_artifact_already_available(self) -> None:
     """Test artifact code already available case."""
     with (
       patch("src.tools.index_artifact.validate_maven_coordinates"),
       patch("src.tools.index_artifact.StorageManager") as mock_storage_class,
       patch("src.tools.index_artifact.is_artifact_code_available", return_value=True),
-      patch("src.tools.list_artifacts.get_artifact_status", return_value="source-jar,file-searchable"),
+      patch(
+        "src.tools.list_artifacts.get_artifact_status",
+        return_value="source-jar,file-searchable",
+      ),
     ):
       mock_storage = MagicMock()
       mock_storage.ensure_directories = MagicMock()
@@ -111,11 +119,11 @@ class TestIndexArtifact:
 
       result = await index_artifact("org.example", "test-lib", "1.0.0")
 
-      assert result["status"] == "source-jar,file-searchable"
-      assert result["cache_location"] == "/mock/path"
+      assert result.get("status") == "source-jar,file-searchable"
+      assert result.get("cache_location") == "/mock/path"
 
   @pytest.mark.asyncio
-  async def test_index_artifact_not_registered(self):
+  async def test_index_artifact_not_registered(self) -> None:
     """Test artifact not registered case."""
     with (
       patch("src.tools.index_artifact.validate_maven_coordinates"),
@@ -129,23 +137,23 @@ class TestIndexArtifact:
 
       result = await index_artifact("org.example", "test-lib", "1.0.0")
 
-      assert result["status"] == "not_registered"
-      assert result["cache_location"] == ""
+      assert result.get("status") == "not_registered"
+      assert result.get("cache_location") == ""
       assert "message" in result
-      assert "not registered" in result["message"]
+      assert "not registered" in result.get("message", "")
 
   @pytest.mark.asyncio
-  async def test_index_artifact_no_jar_files(self, temp_storage):
+  async def test_index_artifact_no_jar_files(self, temp_storage: Path) -> None:
     """Test when source directory exists but contains no JAR files."""
-    source_info = {
-      "group_id": "org.example",
-      "artifact_id": "test-lib",
-      "version": "1.0.0",
-      "source_uri": "file:///test/source.jar",
-      "git_ref": None,
-      "source_type": "jar",
-      "local_path": "source-jar/org/example/test-lib/1.0.0",
-    }
+    source_info: RegisteredSourceInfo = RegisteredSourceInfo(
+      group_id="org.example",
+      artifact_id="test-lib",
+      version="1.0.0",
+      source_uri="file:///test/source.jar",
+      git_ref=None,
+      source_type="jar",
+      local_path="source-jar/org/example/test-lib/1.0.0",
+    )
 
     # Create source directory but no JAR files
     source_dir = temp_storage / "source-jar" / "org" / "example" / "test-lib" / "1.0.0"
@@ -170,12 +178,12 @@ class TestIndexArtifact:
 
       result = await index_artifact("org.example", "test-lib", "1.0.0")
 
-      assert result["status"] == "extraction_failed"
+      assert result.get("status") == "extraction_failed"
       assert "message" in result
-      assert "No JAR files found" in result["message"]
+      assert "No JAR files found" in result.get("message", "")
 
   @pytest.mark.asyncio
-  async def test_index_artifact_code_already_available(self, temp_storage):
+  async def test_index_artifact_code_already_available(self, temp_storage: Path) -> None:
     """Test artifact code already available case."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -184,7 +192,10 @@ class TestIndexArtifact:
       patch("src.tools.index_artifact.validate_maven_coordinates"),
       patch("src.tools.index_artifact.StorageManager") as mock_storage_class,
       patch("src.tools.index_artifact.is_artifact_code_available", return_value=True),
-      patch("src.tools.list_artifacts.get_artifact_status", return_value="source-dir,file-searchable"),
+      patch(
+        "src.tools.list_artifacts.get_artifact_status",
+        return_value="source-dir,file-searchable",
+      ),
     ):
       mock_storage = MagicMock()
       mock_storage.ensure_directories = MagicMock()
@@ -193,17 +204,17 @@ class TestIndexArtifact:
 
       result = await index_artifact("org.example", "test-lib", "1.0.0")
 
-      assert result["status"] == "source-dir,file-searchable"
-      assert result["cache_location"] == str(code_path)
+      assert result.get("status") == "source-dir,file-searchable"
+      assert result.get("cache_location") == str(code_path)
 
   @pytest.mark.asyncio
-  async def test_handle_index_artifact_success(self):
+  async def test_handle_index_artifact_success(self) -> None:
     """Test handle_index_artifact success case."""
-    mock_result = {
-      "status": "success",
-      "cache_location": "/mock/path",
-      "processing_time": "1.23s",
-    }
+    mock_result: IndexArtifactResult = IndexArtifactResult(
+      status="success",
+      cache_location="/mock/path",
+      processing_time="1.23s",
+    )
 
     with patch("src.tools.index_artifact.index_artifact", return_value=mock_result):
       arguments = {
@@ -222,7 +233,7 @@ class TestIndexArtifact:
       assert response_data["cache_location"] == "/mock/path"
 
   @pytest.mark.asyncio
-  async def test_handle_index_artifact_exception(self):
+  async def test_handle_index_artifact_exception(self) -> None:
     """Test handle_index_artifact exception handling."""
     with patch(
       "src.tools.index_artifact.index_artifact", side_effect=Exception("Test error")

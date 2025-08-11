@@ -2,6 +2,7 @@
 
 import tempfile
 from pathlib import Path
+from typing import Iterator
 import pytest
 
 from src.utils.filesystem_exploration import (
@@ -18,7 +19,7 @@ class TestGetFileInfo:
   """Test get_file_info function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -285,21 +286,21 @@ class TestSearchFileContents:
   def sample_directory(self, tmp_path: Path) -> Path:
     """Create sample directory with files containing searchable content."""
     (tmp_path / "class1.java").write_text(
-      "package com.example;\n"
-      "public class Test {\n"
-      "    public void method() {\n"
-      '        System.out.println("Hello World");\n'
-      "    }\n"
+      "package com.example;\n" +
+      "public class Test {\n" +
+      "    public void method() {\n" +
+      '        System.out.println("Hello World");\n' +
+      "    }\n" +
       "}\n"
     )
 
     (tmp_path / "class2.java").write_text(
-      "package com.example;\n"
-      "public class Utils {\n"
-      '    private static final String HELLO = "Hello";\n'
-      "    public String getGreeting() {\n"
-      '        return HELLO + " World";\n'
-      "    }\n"
+      "package com.example;\n" +
+      "public class Utils {\n" +
+      '    private static final String HELLO = "Hello";\n' +
+      "    public String getGreeting() {\n" +
+      '        return HELLO + " World";\n' +
+      "    }\n" +
       "}\n"
     )
 
@@ -318,7 +319,7 @@ class TestSearchFileContents:
     assert len(result["matches"]) >= 2  # Should match in multiple files
 
     # Check that matches contain the search term
-    for file_path, matches in result["matches"].items():
+    for _, matches in result["matches"].items():
       for match in matches:
         assert "Hello" in match["content"]
 
@@ -332,7 +333,7 @@ class TestSearchFileContents:
 
     # Should match class declarations
     found_classes = False
-    for file_path, matches in result["matches"].items():
+    for _, matches in result["matches"].items():
       if matches:
         found_classes = True
         break
@@ -349,7 +350,7 @@ class TestSearchFileContents:
     assert result["search_config"]["context_after"] == 1
 
     # Check that context is included
-    for file_path, matches in result["matches"].items():
+    for _, matches in result["matches"].items():
       for match in matches:
         lines = match["content"].split("\n")
         assert len(lines) >= 3  # At least match line + context

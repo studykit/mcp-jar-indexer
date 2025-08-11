@@ -3,6 +3,7 @@
 import json
 import tempfile
 from pathlib import Path
+from typing import Any, Dict, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,13 +15,13 @@ class TestSearchFileNames:
   """Test cases for search_file_names functionality."""
 
   @pytest.fixture
-  def temp_storage(self):
+  def temp_storage(self) -> Generator[Path, None, None]:
     """Create temporary storage directory."""
     with tempfile.TemporaryDirectory() as temp_dir:
       yield Path(temp_dir)
 
   @pytest.fixture
-  def mock_search_result(self):
+  def mock_search_result(self) -> Dict[str, Any]:
     """Mock search_files_by_pattern result."""
     return {
       "files": [
@@ -40,12 +41,12 @@ class TestSearchFileNames:
     }
 
   @pytest.mark.asyncio
-  async def test_search_file_names_success(self, temp_storage, mock_search_result):
+  async def test_search_file_names_success(self, temp_storage: Path, mock_search_result: Dict[str, Any]) -> None:
     """Test successful file name search."""
-    code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
+    code_path: Path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
     # Create the src directory that the test is looking for
-    src_path = code_path / "src"
+    src_path: Path = code_path / "src"
     src_path.mkdir(exist_ok=True)
 
     with (
@@ -74,11 +75,9 @@ class TestSearchFileNames:
       assert result["files"][0]["name"] == "TestClass.java"
 
   @pytest.mark.asyncio
-  async def test_search_file_names_invalid_pattern_type(self):
+  async def test_search_file_names_invalid_pattern_type(self) -> None:
     """Test invalid pattern type case."""
-    with (
-      patch("src.tools.search_file_names.validate_maven_coordinates"),
-    ):
+    with patch("src.tools.search_file_names.validate_maven_coordinates"):
       result = await search_file_names(
         "org.example", "test-lib", "1.0.0", "*.java", "invalid_type"
       )
@@ -87,7 +86,7 @@ class TestSearchFileNames:
       assert result["files"] == []
 
   @pytest.mark.asyncio
-  async def test_search_file_names_not_indexed(self):
+  async def test_search_file_names_not_indexed(self) -> None:
     """Test artifact not indexed case."""
     with (
       patch("src.tools.search_file_names.validate_maven_coordinates"),
@@ -101,7 +100,7 @@ class TestSearchFileNames:
       assert result["files"] == []
 
   @pytest.mark.asyncio
-  async def test_search_file_names_not_found(self):
+  async def test_search_file_names_not_found(self) -> None:
     """Test artifact code directory not found."""
     with (
       patch("src.tools.search_file_names.validate_maven_coordinates"),
@@ -119,9 +118,9 @@ class TestSearchFileNames:
       assert result["status"] == "not_found"
 
   @pytest.mark.asyncio
-  async def test_search_file_names_start_path_not_found(self, temp_storage):
+  async def test_search_file_names_start_path_not_found(self, temp_storage: Path) -> None:
     """Test start path not found."""
-    code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
+    code_path: Path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
 
     with (
@@ -143,11 +142,11 @@ class TestSearchFileNames:
       assert result["status"] == "start_path_not_found"
 
   @pytest.mark.asyncio
-  async def test_search_file_names_start_path_not_directory(self, temp_storage):
+  async def test_search_file_names_start_path_not_directory(self, temp_storage: Path) -> None:
     """Test start path is not a directory."""
-    code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
+    code_path: Path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
-    file_path = code_path / "test.txt"
+    file_path: Path = code_path / "test.txt"
     file_path.write_text("test content")
 
     with (
@@ -169,9 +168,9 @@ class TestSearchFileNames:
       assert result["status"] == "start_path_not_directory"
 
   @pytest.mark.asyncio
-  async def test_handle_search_file_names_success(self, mock_search_result):
+  async def test_handle_search_file_names_success(self, mock_search_result: Dict[str, Any]) -> None:
     """Test handle_search_file_names success case."""
-    mock_result = {
+    mock_result: Dict[str, Any] = {
       "status": "success",
       "search_config": {
         "start_path": "src",
@@ -202,7 +201,7 @@ class TestSearchFileNames:
       assert len(response_data["files"]) == 2
 
   @pytest.mark.asyncio
-  async def test_handle_search_file_names_exception(self):
+  async def test_handle_search_file_names_exception(self) -> None:
     """Test handle_search_file_names exception handling."""
     with patch(
       "src.tools.search_file_names.search_file_names",

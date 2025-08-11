@@ -3,6 +3,7 @@
 import zipfile
 import tempfile
 from pathlib import Path
+from typing import Iterator
 from unittest.mock import patch, Mock
 import pytest
 import requests
@@ -18,7 +19,7 @@ class TestDownloadFile:
   """Test download_file function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -88,7 +89,7 @@ class TestValidateJarFile:
   """Test validate_jar_file function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -169,7 +170,7 @@ class TestSafeCopyFile:
   """Test safe_copy_file function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -235,7 +236,7 @@ class TestSafeSymlink:
   """Test safe_symlink function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -291,7 +292,7 @@ class TestSafeCopyTree:
   """Test safe_copy_tree function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -339,7 +340,7 @@ class TestGetFileInfo:
   """Test get_file_info function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -384,14 +385,14 @@ class TestGetFileInfo:
     nonexistent = temp_dir / "nonexistent.txt"
 
     with pytest.raises(ValueError, match="Path does not exist"):
-      get_file_info(nonexistent)
+      get_file_info(str(nonexistent))
 
 
 class TestEnsureDirectory:
   """Test ensure_directory function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)

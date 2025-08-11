@@ -3,6 +3,7 @@
 import json
 import tempfile
 from pathlib import Path
+from typing import Any, Dict, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,13 +15,13 @@ class TestGetFile:
   """Test cases for get_file functionality."""
 
   @pytest.fixture
-  def temp_storage(self):
+  def temp_storage(self) -> Generator[Path, None, None]:
     """Create temporary storage directory."""
     with tempfile.TemporaryDirectory() as temp_dir:
       yield Path(temp_dir)
 
   @pytest.fixture
-  def mock_file_content_result(self):
+  def mock_file_content_result(self) -> Dict[str, Any]:
     """Mock get_file_content result."""
     return {
       "file_info": {
@@ -36,7 +37,7 @@ class TestGetFile:
     }
 
   @pytest.mark.asyncio
-  async def test_get_file_success(self, temp_storage, mock_file_content_result):
+  async def test_get_file_success(self, temp_storage: Path, mock_file_content_result: Dict[str, Any]) -> None:
     """Test successful file retrieval."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -50,7 +51,6 @@ class TestGetFile:
       patch(
         "src.tools.get_file.get_file_content", return_value=mock_file_content_result
       ),
-      patch("src.tools.get_file.normalize_path", return_value="TestClass.java"),
     ):
       mock_storage = MagicMock()
       mock_storage.get_code_path = MagicMock(return_value=code_path)
@@ -68,7 +68,7 @@ class TestGetFile:
       )
 
   @pytest.mark.asyncio
-  async def test_get_file_not_indexed(self):
+  async def test_get_file_not_indexed(self) -> None:
     """Test artifact not indexed case."""
     with (
       patch("src.tools.get_file.validate_maven_coordinates"),
@@ -81,7 +81,7 @@ class TestGetFile:
       assert result["content"]["source_code"] == ""
 
   @pytest.mark.asyncio
-  async def test_get_file_not_found(self):
+  async def test_get_file_not_found(self) -> None:
     """Test artifact code directory not found."""
     with (
       patch("src.tools.get_file.validate_maven_coordinates"),
@@ -97,7 +97,7 @@ class TestGetFile:
       assert result["status"] == "not_found"
 
   @pytest.mark.asyncio
-  async def test_get_file_file_not_found(self, temp_storage):
+  async def test_get_file_file_not_found(self, temp_storage: Path) -> None:
     """Test requested file not found."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -106,7 +106,6 @@ class TestGetFile:
       patch("src.tools.get_file.validate_maven_coordinates"),
       patch("src.tools.get_file.is_artifact_code_available", return_value=True),
       patch("src.tools.get_file.StorageManager") as mock_storage_class,
-      patch("src.tools.get_file.normalize_path", return_value="NonExistent.java"),
     ):
       mock_storage = MagicMock()
       mock_storage.get_code_path = MagicMock(return_value=code_path)
@@ -117,7 +116,7 @@ class TestGetFile:
       assert result["status"] == "file_not_found"
 
   @pytest.mark.asyncio
-  async def test_get_file_not_file(self, temp_storage):
+  async def test_get_file_not_file(self, temp_storage: Path) -> None:
     """Test requested path is not a file."""
     code_path = temp_storage / "code" / "org" / "example" / "test-lib" / "1.0.0"
     code_path.mkdir(parents=True, exist_ok=True)
@@ -128,7 +127,6 @@ class TestGetFile:
       patch("src.tools.get_file.validate_maven_coordinates"),
       patch("src.tools.get_file.is_artifact_code_available", return_value=True),
       patch("src.tools.get_file.StorageManager") as mock_storage_class,
-      patch("src.tools.get_file.normalize_path", return_value="src"),
     ):
       mock_storage = MagicMock()
       mock_storage.get_code_path = MagicMock(return_value=code_path)
@@ -139,9 +137,9 @@ class TestGetFile:
       assert result["status"] == "not_file"
 
   @pytest.mark.asyncio
-  async def test_handle_get_file_success(self, mock_file_content_result):
+  async def test_handle_get_file_success(self, mock_file_content_result: Dict[str, Any]) -> None:
     """Test handle_get_file success case."""
-    mock_result = {
+    mock_result: Dict[str, Any] = {
       "status": "success",
       "file_info": mock_file_content_result["file_info"],
       "content": mock_file_content_result["content"],
@@ -165,7 +163,7 @@ class TestGetFile:
       assert response_data["file_info"]["name"] == "TestClass.java"
 
   @pytest.mark.asyncio
-  async def test_handle_get_file_exception(self):
+  async def test_handle_get_file_exception(self) -> None:
     """Test handle_get_file exception handling."""
     with patch("src.tools.get_file.get_file", side_effect=Exception("Test error")):
       arguments = {

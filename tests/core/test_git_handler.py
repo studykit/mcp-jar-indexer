@@ -5,7 +5,8 @@ import shutil
 import tempfile
 import subprocess
 from pathlib import Path
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import Mock, MagicMock, patch
 
 import pytest
 from git import GitCommandError
@@ -87,7 +88,7 @@ class TestGitHandler:
     assert not self.git_handler.is_git_repository("")
 
   @patch("subprocess.run")
-  def test_clone_bare_repository_success(self, mock_subprocess):
+  def test_clone_bare_repository_success(self, mock_subprocess: MagicMock) -> None:
     """Test successful bare repository cloning."""
     # Mock successful subprocess call
     mock_result = Mock()
@@ -114,7 +115,7 @@ class TestGitHandler:
     assert git_uri in call_args
 
   @patch("subprocess.run")
-  def test_clone_bare_repository_already_exists(self, mock_subprocess):
+  def test_clone_bare_repository_already_exists(self, mock_subprocess: MagicMock) -> None:
     """Test bare repository cloning when repository already exists."""
     git_uri = "https://github.com/user/repo.git"
     group_id = "com.example"
@@ -131,7 +132,7 @@ class TestGitHandler:
     mock_subprocess.assert_not_called()
 
   @patch("subprocess.run")
-  def test_clone_bare_repository_auth_failure(self, mock_subprocess):
+  def test_clone_bare_repository_auth_failure(self, mock_subprocess: MagicMock) -> None:
     """Test bare repository cloning with authentication failure."""
     mock_result = Mock()
     mock_result.returncode = 1
@@ -149,7 +150,7 @@ class TestGitHandler:
     assert "Git authentication failed" in str(exc_info.value)
 
   @patch("subprocess.run")
-  def test_clone_bare_repository_clone_failure(self, mock_subprocess):
+  def test_clone_bare_repository_clone_failure(self, mock_subprocess: MagicMock) -> None:
     """Test bare repository cloning with general failure."""
     mock_result = Mock()
     mock_result.returncode = 1
@@ -166,7 +167,7 @@ class TestGitHandler:
     assert "Git clone failed" in str(exc_info.value)
 
   @patch("subprocess.run")
-  def test_clone_bare_repository_timeout(self, mock_subprocess):
+  def test_clone_bare_repository_timeout(self, mock_subprocess: MagicMock) -> None:
     """Test bare repository cloning with timeout."""
     mock_subprocess.side_effect = subprocess.TimeoutExpired("git", 300)
 
@@ -180,7 +181,7 @@ class TestGitHandler:
     assert "timed out" in str(exc_info.value)
 
   @patch("src.core.git_handler.Repo")
-  def test_create_worktree_success(self, mock_repo_class):
+  def test_create_worktree_success(self, mock_repo_class: MagicMock) -> None:
     """Test successful worktree creation."""
     group_id = "com.example"
     artifact_id = "test-lib"
@@ -211,7 +212,7 @@ class TestGitHandler:
     mock_git.worktree.assert_called_once_with("add", str(expected_path), git_ref)
 
   @patch("src.core.git_handler.Repo")
-  def test_create_worktree_no_bare_repo(self, mock_repo_class):
+  def test_create_worktree_no_bare_repo(self, mock_repo_class: MagicMock) -> None:
     """Test worktree creation when bare repository doesn't exist."""
     group_id = "com.example"
     artifact_id = "test-lib"
@@ -223,7 +224,7 @@ class TestGitHandler:
     assert "Bare repository not found" in str(exc_info.value)
 
   @patch("src.core.git_handler.Repo")
-  def test_create_worktree_already_exists(self, mock_repo_class):
+  def test_create_worktree_already_exists(self, mock_repo_class: MagicMock) -> None:
     """Test worktree creation when worktree already exists."""
     group_id = "com.example"
     artifact_id = "test-lib"
@@ -242,7 +243,7 @@ class TestGitHandler:
     mock_repo_class.assert_not_called()
 
   @patch("src.core.git_handler.Repo")
-  def test_create_worktree_invalid_git_ref(self, mock_repo_class):
+  def test_create_worktree_invalid_git_ref(self, mock_repo_class: MagicMock) -> None:
     """Test worktree creation with invalid git reference."""
     group_id = "com.example"
     artifact_id = "test-lib"
@@ -267,7 +268,7 @@ class TestGitHandler:
     assert f"Git reference '{git_ref}' not found" in str(exc_info.value)
 
   @patch("src.core.git_handler.Repo")
-  def test_update_repository_success(self, mock_repo_class):
+  def test_update_repository_success(self, mock_repo_class: MagicMock) -> None:
     """Test successful repository update."""
     group_id = "com.example"
     artifact_id = "test-lib"
@@ -289,7 +290,7 @@ class TestGitHandler:
     mock_remote.fetch.assert_called_once()
 
   @patch("src.core.git_handler.Repo")
-  def test_update_repository_no_bare_repo(self, mock_repo_class):
+  def test_update_repository_no_bare_repo(self, mock_repo_class: MagicMock) -> None:
     """Test repository update when bare repository doesn't exist."""
     group_id = "com.example"
     artifact_id = "test-lib"
@@ -300,7 +301,7 @@ class TestGitHandler:
     mock_repo_class.assert_not_called()
 
   @patch("src.core.git_handler.Repo")
-  def test_remove_worktree_success(self, mock_repo_class):
+  def test_remove_worktree_success(self, mock_repo_class: MagicMock) -> None:
     """Test successful worktree removal."""
     group_id = "com.example"
     artifact_id = "test-lib"
@@ -334,7 +335,7 @@ class TestGitHandler:
     assert result is True  # Should return True if worktree doesn't exist
 
   @patch("src.core.git_handler.Repo")
-  def test_list_worktrees_success(self, mock_repo_class):
+  def test_list_worktrees_success(self, mock_repo_class: MagicMock) -> None:
     """Test successful worktree listing."""
     group_id = "com.example"
     artifact_id = "test-lib"
@@ -378,7 +379,7 @@ class TestGitHandler:
     assert result == []
 
   @patch("src.core.git_handler.Repo")
-  def test_get_default_branch(self, mock_repo_class):
+  def test_get_default_branch(self, mock_repo_class: MagicMock) -> None:
     """Test getting default branch name."""
     mock_repo = Mock()
     mock_git = Mock()
@@ -391,7 +392,7 @@ class TestGitHandler:
     assert result == "main"
 
   @patch("src.core.git_handler.Repo")
-  def test_get_default_branch_fallback(self, mock_repo_class):
+  def test_get_default_branch_fallback(self, mock_repo_class: MagicMock) -> None:
     """Test getting default branch name with fallback logic."""
     mock_repo = Mock()
     mock_git = Mock()
@@ -408,7 +409,7 @@ class TestGitHandler:
     assert result == "master"
 
   @patch("src.core.git_handler.Repo")
-  def test_validate_git_ref_success(self, mock_repo_class):
+  def test_validate_git_ref_success(self, mock_repo_class: MagicMock) -> None:
     """Test successful git reference validation."""
     mock_repo = Mock()
     mock_git = Mock()
@@ -419,7 +420,7 @@ class TestGitHandler:
     assert result is True
 
   @patch("src.core.git_handler.Repo")
-  def test_validate_git_ref_with_origin_prefix(self, mock_repo_class):
+  def test_validate_git_ref_with_origin_prefix(self, mock_repo_class: MagicMock) -> None:
     """Test git reference validation with origin prefix fallback."""
     mock_repo = Mock()
     mock_git = Mock()
@@ -434,7 +435,7 @@ class TestGitHandler:
     assert result is True
 
   @patch("src.core.git_handler.Repo")
-  def test_validate_git_ref_failure(self, mock_repo_class):
+  def test_validate_git_ref_failure(self, mock_repo_class: MagicMock) -> None:
     """Test git reference validation failure."""
     mock_repo = Mock()
     mock_git = Mock()
@@ -446,7 +447,7 @@ class TestGitHandler:
 
   def test_prepare_auth_args_ssh_key(self):
     """Test authentication argument preparation with SSH key."""
-    auth_config = {"ssh_key": "/path/to/ssh/key"}
+    auth_config: dict[str, Any] = {"ssh_key": "/path/to/ssh/key"}
 
     result = self.git_handler._prepare_auth_args(auth_config)
 
@@ -457,7 +458,7 @@ class TestGitHandler:
 
   def test_prepare_auth_args_username_token(self):
     """Test authentication argument preparation with username/token."""
-    auth_config = {"username": "user", "token": "token123"}
+    auth_config: dict[str, Any] = {"username": "user", "token": "token123"}
 
     result = self.git_handler._prepare_auth_args(auth_config)
 
@@ -466,7 +467,7 @@ class TestGitHandler:
 
   def test_prepare_auth_args_empty(self):
     """Test authentication argument preparation with no auth config."""
-    auth_config = {}
+    auth_config: dict[str, Any] = {}
 
     result = self.git_handler._prepare_auth_args(auth_config)
 
@@ -475,7 +476,7 @@ class TestGitHandler:
   def test_apply_auth_config_ssh_key(self):
     """Test applying SSH key authentication configuration."""
     mock_config_writer = Mock()
-    auth_config = {"ssh_key": "/path/to/ssh/key"}
+    auth_config: dict[str, Any] = {"ssh_key": "/path/to/ssh/key"}
 
     self.git_handler._apply_auth_config(mock_config_writer, auth_config)
 
@@ -486,7 +487,7 @@ class TestGitHandler:
   def test_apply_auth_config_no_ssh_key(self):
     """Test applying authentication configuration without SSH key."""
     mock_config_writer = Mock()
-    auth_config = {"username": "user", "token": "token123"}
+    auth_config: dict[str, Any] = {"username": "user", "token": "token123"}
 
     self.git_handler._apply_auth_config(mock_config_writer, auth_config)
 

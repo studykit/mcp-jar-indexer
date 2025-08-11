@@ -133,8 +133,9 @@ async def register_source(
     if auto_index:
       try:
         from .index_artifact import index_artifact
+
         result = await index_artifact(group_id, artifact_id, version)
-        
+
         # Return the actual artifact status from index_artifact
         return {
           "group_id": group_id,
@@ -145,11 +146,14 @@ async def register_source(
       except Exception as e:
         logger.warning(f"Auto-indexing failed: {e}")
         # Fall through to registration-only response
-    
+
     # Get current artifact status without indexing
     from .list_artifacts import get_artifact_status
-    current_status = get_artifact_status(storage_manager, group_id, artifact_id, version)
-    
+
+    current_status = get_artifact_status(
+      storage_manager, group_id, artifact_id, version
+    )
+
     return {
       "group_id": group_id,
       "artifact_id": artifact_id,

@@ -70,17 +70,19 @@ async def index_artifact(
     if is_artifact_code_available(group_id, artifact_id, version):
       cache_location = storage_manager.get_code_path(group_id, artifact_id, version)
       processing_time = f"{time.time() - start_time:.2f}s"
-      
+
       # Get current artifact status
       from .list_artifacts import get_artifact_status
-      current_status = get_artifact_status(storage_manager, group_id, artifact_id, version)
-      
+
+      current_status = get_artifact_status(
+        storage_manager, group_id, artifact_id, version
+      )
+
       return IndexArtifactResult(
         status=current_status,
         cache_location=str(cache_location),
         processing_time=processing_time,
       )
-
 
     # Get registered source info
     source_info = get_registered_source_info(group_id, artifact_id, version)
@@ -96,11 +98,14 @@ async def index_artifact(
     # Source extraction completed - get current status
     cache_location = storage_manager.get_code_path(group_id, artifact_id, version)
     processing_time = f"{time.time() - start_time:.2f}s"
-    
+
     # Get current artifact status
     from .list_artifacts import get_artifact_status
-    current_status = get_artifact_status(storage_manager, group_id, artifact_id, version)
-    
+
+    current_status = get_artifact_status(
+      storage_manager, group_id, artifact_id, version
+    )
+
     return IndexArtifactResult(
       status=current_status,
       cache_location=str(cache_location),

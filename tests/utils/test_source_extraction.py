@@ -3,7 +3,8 @@
 import tempfile
 import zipfile
 from pathlib import Path
-from unittest.mock import patch, Mock
+from typing import Iterator
+from unittest.mock import patch, Mock, MagicMock
 import pytest
 
 from src.utils.source_extraction import (
@@ -20,7 +21,7 @@ class TestExtractJarSource:
   """Test extract_jar_source function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -74,7 +75,7 @@ class TestCopyDirectorySource:
   """Test copy_directory_source function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -118,7 +119,7 @@ class TestSafeCopyFile:
   """Test safe_copy_file function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -184,7 +185,7 @@ class TestSafeSymlink:
   """Test safe_symlink function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -240,7 +241,7 @@ class TestSafeCopyTree:
   """Test safe_copy_tree function."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -289,7 +290,7 @@ class TestGitFunctions:
   """Test Git-related functions with mocks."""
 
   @pytest.fixture
-  def temp_dir(self) -> Path:
+  def temp_dir(self) -> Iterator[Path]:
     """Create temporary directory for tests."""
     with tempfile.TemporaryDirectory() as tmp_dir:
       yield Path(tmp_dir)
@@ -358,7 +359,7 @@ class TestGitFunctions:
       extract_7z_source(str(nonexistent_archive), str(target_dir))
 
   @patch("src.utils.source_extraction.git.Repo")
-  def test_create_git_worktree_success(self, mock_repo_class, temp_dir: Path) -> None:
+  def test_create_git_worktree_success(self, mock_repo_class: MagicMock, temp_dir: Path) -> None:
     """Test Git worktree creation success."""
     from src.utils.source_extraction import create_git_worktree
 
@@ -379,11 +380,11 @@ class TestGitFunctions:
 
   @patch("src.utils.source_extraction.git.Repo")
   def test_create_git_worktree_ref_not_found(
-    self, mock_repo_class, temp_dir: Path
+    self, mock_repo_class: MagicMock, temp_dir: Path
   ) -> None:
     """Test Git worktree creation with invalid ref."""
     from src.utils.source_extraction import create_git_worktree
-    import git
+    from git import exc as git_exc
 
     bare_repo_path = temp_dir / "bare"
     bare_repo_path.mkdir()
@@ -394,7 +395,7 @@ class TestGitFunctions:
     # Mock Git repo with bad name error
     mock_repo = Mock()
     mock_repo_class.return_value = mock_repo
-    mock_repo.commit.side_effect = git.exc.BadName()
+    mock_repo.commit.side_effect = git_exc.BadName()
 
     with pytest.raises(GitRefNotFoundError):
       create_git_worktree(str(bare_repo_path), str(target_dir), git_ref)
