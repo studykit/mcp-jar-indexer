@@ -48,7 +48,9 @@ async def main_async():
 
   # Initialize options for the MCP server
   options = InitializationOptions(
-    server_name="jar-indexer", server_version="0.1.0", capabilities=ServerCapabilities(tools={}) # type: ignore
+    server_name="jar-indexer",
+    server_version="0.1.0",
+    capabilities=ServerCapabilities(tools={}),  # type: ignore
   )
 
   async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):

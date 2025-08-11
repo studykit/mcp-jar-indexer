@@ -4,14 +4,38 @@ This module provides utility functions for file operations including
 downloading files, validating JAR files, and handling file system operations.
 """
 
+import os
 import shutil
 import zipfile
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, TypedDict
 from urllib.parse import urlparse
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+# Import validation function
+from .validation import validate_maven_coordinates
+
+
+class FileInfo(TypedDict):
+  """File metadata information"""
+
+  name: str  # File name
+  size: str  # File size (e.g., "1KB", "2.5MB")
+  line_count: int  # Number of lines in text file
+
+
+class RegisteredSourceInfo(TypedDict):
+  """Registered artifact source information"""
+
+  group_id: str  # Maven group ID
+  artifact_id: str  # Maven artifact ID
+  version: str  # Maven version
+  source_uri: str  # Original source URI (for reference)
+  git_ref: str | None  # Git reference (for Git sources)
+  source_type: str  # "jar", "directory", "git"
+  local_path: str  # Intermediate storage relative path (from base directory)
 
 
 def download_file(
@@ -319,66 +343,68 @@ def safe_copy_tree(
     ) from e
 
 
-def get_file_info(file_path: Path) -> Dict[str, Any]:
-  """Get comprehensive information about a file or directory.
+def get_file_info(file_path: str) -> FileInfo:
+  """Get file metadata information.
 
   Args:
-    file_path: Path to examine
+    file_path: Path to file to examine
 
   Returns:
-    Dictionary containing file information
+    FileInfo containing file metadata
 
   Raises:
-    ValueError: If path doesn't exist
+    ValueError: If path doesn't exist or is not a file
   """
-  if not file_path.exists():
+  path_obj = Path(file_path)
+
+  if not path_obj.exists():
     raise ValueError(f"Path does not exist: {file_path}")
 
-  stat_info = file_path.stat()
+  if not path_obj.is_file():
+    raise ValueError(f"Path is not a file: {file_path}")
 
-  info = {
-    "path": str(file_path),
-    "name": file_path.name,
-    "exists": True,
-    "size": stat_info.st_size,
-    "is_file": file_path.is_file(),
-    "is_directory": file_path.is_dir(),
-    "is_symlink": file_path.is_symlink(),
-    "modified_time": stat_info.st_mtime,
-    "permissions": oct(stat_info.st_mode)[-3:],
-  }
+  stat_info = path_obj.stat()
+  file_size = stat_info.st_size
 
-  if file_path.is_file():
-    info["suffix"] = file_path.suffix.lower()
-    info["stem"] = file_path.stem
+  # Format file size in human-readable format
+  def format_file_size(size_bytes: int) -> str:
+    """Convert bytes to human readable format"""
+    if size_bytes == 0:
+      return "0B"
 
-    # Add JAR-specific information if it's a JAR file
-    if info["suffix"] == ".jar":
-      try:
-        jar_info = validate_jar_file(file_path)
-        info["jar_validation"] = jar_info
-      except ValueError as e:
-        info["jar_validation"] = {"status": "invalid", "error": str(e)}
+    units = ["B", "KB", "MB", "GB", "TB"]
+    size = float(size_bytes)
+    unit_index = 0
 
-  elif file_path.is_dir():
-    # Count directory contents
-    try:
-      contents = list(file_path.iterdir())
-      info["contents_count"] = len(contents)
-      info["subdirectories"] = sum(1 for p in contents if p.is_dir())
-      info["files"] = sum(1 for p in contents if p.is_file())
-    except OSError:
-      info["contents_count"] = "unknown"
-      info["subdirectories"] = "unknown"
-      info["files"] = "unknown"
+    while size >= 1024.0 and unit_index < len(units) - 1:
+      size /= 1024.0
+      unit_index += 1
 
-  if file_path.is_symlink():
-    try:
-      info["symlink_target"] = str(file_path.readlink())
-    except OSError:
-      info["symlink_target"] = "unknown"
+    if unit_index == 0:
+      return f"{int(size)}{units[unit_index]}"
+    else:
+      return f"{size:.1f}{units[unit_index]}"
 
-  return info
+  # Count lines for text files
+  line_count = 0
+  try:
+    # Check if file appears to be binary by reading first 1024 bytes
+    with open(path_obj, "rb") as f:
+      chunk = f.read(1024)
+      # If chunk contains null bytes, treat as binary
+      if b"\x00" in chunk:
+        line_count = 0
+      else:
+        # Try to read as text file to count lines
+        with open(path_obj, "r", encoding="utf-8", errors="ignore") as text_f:
+          line_count = sum(1 for _ in text_f)
+  except (UnicodeDecodeError, OSError):
+    # If it's a binary file or can't be read, set line_count to 0
+    line_count = 0
+
+  return FileInfo(
+    name=path_obj.name, size=format_file_size(file_size), line_count=line_count
+  )
 
 
 def ensure_directory(dir_path: Path, mode: int = 0o755) -> Dict[str, Any]:
@@ -413,3 +439,262 @@ def ensure_directory(dir_path: Path, mode: int = 0o755) -> Dict[str, Any]:
 
   except OSError as e:
     raise OSError(f"Failed to create directory {dir_path}: {str(e)}") from e
+
+
+def normalize_path(path: str) -> str:
+  """Cross-platform path normalization.
+
+  Args:
+    path: Path string to normalize
+
+  Returns:
+    Normalized absolute path
+
+  Raises:
+    ValueError: If path is empty or invalid
+  """
+  if not path or not isinstance(path, str):
+    raise ValueError("Path must be a non-empty string")
+
+  path = path.strip()
+  if not path:
+    raise ValueError("Path cannot be empty or whitespace only")
+
+  # Normalize path using os.path.normpath and convert to absolute path
+  normalized = os.path.normpath(os.path.abspath(path))
+  return normalized
+
+
+def calculate_directory_depth(base_path: str, target_path: str) -> int:
+  """Calculate directory depth between base and target paths.
+
+  Args:
+    base_path: Base directory path
+    target_path: Target path to calculate depth for
+
+  Returns:
+    Directory depth (0 if target is same as base, positive for subdirectories)
+
+  Raises:
+    ValueError: If paths are invalid or target is not under base
+  """
+  normalized_base = normalize_path(base_path)
+  normalized_target = normalize_path(target_path)
+
+  # Check if target path is under base path
+  try:
+    relative_path = os.path.relpath(normalized_target, normalized_base)
+  except ValueError as e:
+    raise ValueError(f"Cannot calculate relative path: {e}") from e
+
+  # If relative path starts with '..', target is not under base
+  if relative_path.startswith(".."):
+    raise ValueError(
+      f"Target path is not under base path: {target_path} not under {base_path}"
+    )
+
+  # If paths are the same, depth is 0
+  if relative_path == ".":
+    return 0
+
+  # Count path components to determine depth
+  path_parts = Path(relative_path).parts
+  return len(path_parts)
+
+
+def get_artifact_code_path(group_id: str, artifact_id: str, version: str) -> str:
+  """Convert Maven coordinates to artifact code directory path.
+
+  Args:
+    group_id: Maven group ID (e.g., 'org.springframework')
+    artifact_id: Maven artifact ID (e.g., 'spring-core')
+    version: Maven version (e.g., '5.3.21')
+
+  Returns:
+    Relative path to artifact code directory
+
+  Raises:
+    ValueError: If Maven coordinates are invalid
+  """
+  # Validate Maven coordinates
+  validate_maven_coordinates(group_id, artifact_id, version)
+
+  # Convert group_id dots to path separators (org.springframework -> org/springframework)
+  group_path = group_id.replace(".", "/")
+
+  # Construct path: group_path/artifact_id/version
+  artifact_path = f"{group_path}/{artifact_id}/{version}"
+
+  return artifact_path
+
+
+def is_artifact_code_available(group_id: str, artifact_id: str, version: str) -> bool:
+  """Check if artifact source code exists in code/ directory.
+
+  Args:
+    group_id: Maven group ID
+    artifact_id: Maven artifact ID
+    version: Maven version
+
+  Returns:
+    True if code directory exists and contains sources
+
+  Raises:
+    ValueError: If Maven coordinates are invalid
+  """
+  # Get the artifact code path
+  artifact_path = get_artifact_code_path(group_id, artifact_id, version)
+
+  # Get the base directory from environment or use default ~/.jar-indexer
+  base_dir = os.path.expanduser(os.environ.get("JAR_INDEXER_HOME", "~/.jar-indexer"))
+  code_dir = os.path.join(base_dir, "code", artifact_path)
+
+  # Check if the code directory exists and has content
+  code_path = Path(code_dir)
+  if not code_path.exists():
+    return False
+
+  if not code_path.is_dir():
+    return False
+
+  # Check if directory has any content (should have sources/ subdirectory)
+  try:
+    contents = list(code_path.iterdir())
+    return len(contents) > 0
+  except OSError:
+    return False
+
+
+def is_artifact_code_indexed(group_id: str, artifact_id: str, version: str) -> bool:
+  """Check if artifact is fully indexed (has metadata and index files).
+
+  Args:
+    group_id: Maven group ID
+    artifact_id: Maven artifact ID
+    version: Maven version
+
+  Returns:
+    True if artifact is fully indexed
+
+  Raises:
+    ValueError: If Maven coordinates are invalid
+  """
+  # Get the artifact code path
+  artifact_path = get_artifact_code_path(group_id, artifact_id, version)
+
+  # Get the base directory from environment or use default ~/.jar-indexer
+  base_dir = os.path.expanduser(os.environ.get("JAR_INDEXER_HOME", "~/.jar-indexer"))
+  code_dir = os.path.join(base_dir, "code", artifact_path)
+
+  code_path = Path(code_dir)
+  if not code_path.exists() or not code_path.is_dir():
+    return False
+
+  # Check for required index files
+  required_files = ["metadata.json", "index.json", "packages.json"]
+
+  for required_file in required_files:
+    file_path = code_path / required_file
+    if not file_path.exists() or not file_path.is_file():
+      return False
+
+  # Check if sources directory exists
+  sources_dir = code_path / "sources"
+  if not sources_dir.exists() or not sources_dir.is_dir():
+    return False
+
+  return True
+
+
+def get_registered_source_info(
+  group_id: str, artifact_id: str, version: str
+) -> RegisteredSourceInfo | None:
+  """Retrieve registered source information for an artifact.
+
+  Args:
+    group_id: Maven group ID
+    artifact_id: Maven artifact ID
+    version: Maven version
+
+  Returns:
+    RegisteredSourceInfo if source is registered, None otherwise
+
+  Raises:
+    ValueError: If Maven coordinates are invalid
+  """
+  # Get the artifact path
+  artifact_path = get_artifact_code_path(group_id, artifact_id, version)
+
+  # Get the base directory from environment or use default ~/.jar-indexer
+  base_dir = os.path.expanduser(os.environ.get("JAR_INDEXER_HOME", "~/.jar-indexer"))
+  base_path = Path(base_dir)
+
+  # Check different source types to determine what's registered
+
+  # 1. Check for JAR source in source-jar/ directory
+  jar_dir = base_path / "source-jar" / artifact_path
+  if jar_dir.exists() and jar_dir.is_dir():
+    # Look for JAR files
+    jar_files = list(jar_dir.glob("*.jar"))
+    if jar_files:
+      jar_file = jar_files[0]  # Take the first JAR file found
+      return RegisteredSourceInfo(
+        group_id=group_id,
+        artifact_id=artifact_id,
+        version=version,
+        source_uri=f"file://{jar_file.absolute()}",  # Reconstruct likely source URI
+        git_ref=None,
+        source_type="jar",
+        local_path=f"source-jar/{artifact_path}",
+      )
+
+  # 2. Check for Git source by looking for git-bare and code directories
+  git_bare_path = artifact_path.rsplit("/", 1)[0]  # Remove version for git-bare path
+  git_bare_dir = base_path / "git-bare" / git_bare_path
+  code_dir = base_path / "code" / artifact_path
+
+  if git_bare_dir.exists() and code_dir.exists():
+    # This is likely a Git source
+    # Try to determine git_ref by checking if there's a metadata file or other indicators
+    git_ref = None
+
+    # Check if there's a metadata file that might contain git_ref info
+    metadata_file = code_dir / "metadata.json"
+    if metadata_file.exists():
+      try:
+        import json
+
+        with open(metadata_file, "r") as f:
+          metadata = json.load(f)
+          git_ref = metadata.get("git_ref")
+      except (json.JSONDecodeError, OSError):
+        pass
+
+    # If no git_ref found in metadata, use default 'main'
+    if git_ref is None:
+      git_ref = "main"
+
+    return RegisteredSourceInfo(
+      group_id=group_id,
+      artifact_id=artifact_id,
+      version=version,
+      source_uri="git://unknown",  # Cannot reliably reconstruct original Git URI
+      git_ref=git_ref,
+      source_type="git",
+      local_path=f"code/{artifact_path}",
+    )
+
+  # 3. Check for directory source (code directory exists but no git-bare)
+  if code_dir.exists() and code_dir.is_dir():
+    return RegisteredSourceInfo(
+      group_id=group_id,
+      artifact_id=artifact_id,
+      version=version,
+      source_uri=f"file://{code_dir.absolute()}",  # Use current code directory path
+      git_ref=None,
+      source_type="directory",
+      local_path=f"code/{artifact_path}",
+    )
+
+  # No registered source found
+  return None

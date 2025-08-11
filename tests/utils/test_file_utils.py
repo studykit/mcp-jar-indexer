@@ -349,48 +349,39 @@ class TestGetFileInfo:
       yield Path(tmp_dir)
 
   def test_get_file_info_file(self, temp_dir: Path) -> None:
-    """Test file info for a regular file."""
+    """Test file info for a regular file (Phase 1 API)."""
     test_file = temp_dir / "test.txt"
-    test_file.write_text("test content")
+    test_file.write_text("line 1\nline 2\ntest content")
 
-    info = get_file_info(test_file)
+    info = get_file_info(str(test_file))
 
-    assert info["path"] == str(test_file)
     assert info["name"] == "test.txt"
-    assert info["exists"] is True
-    assert info["is_file"] is True
-    assert info["is_directory"] is False
-    assert info["is_symlink"] is False
-    assert info["suffix"] == ".txt"
-    assert info["stem"] == "test"
+    assert info["line_count"] == 3
+    assert "B" in info["size"] or "KB" in info["size"]
 
   def test_get_file_info_directory(self, temp_dir: Path) -> None:
-    """Test file info for a directory."""
+    """Test file info raises error for directory (Phase 1 API)."""
     # Create some contents
     (temp_dir / "file1.txt").write_text("content")
     (temp_dir / "subdir").mkdir()
 
-    info = get_file_info(temp_dir)
-
-    assert info["is_directory"] is True
-    assert info["is_file"] is False
-    assert info["contents_count"] == 2
-    assert info["files"] == 1
-    assert info["subdirectories"] == 1
+    # Phase 1 get_file_info only works with files, not directories
+    with pytest.raises(ValueError, match="Path is not a file"):
+      get_file_info(str(temp_dir))
 
   def test_get_file_info_jar(self, temp_dir: Path) -> None:
-    """Test file info for a JAR file."""
+    """Test file info for a JAR file (Phase 1 API)."""
     jar_path = temp_dir / "test.jar"
 
     with zipfile.ZipFile(jar_path, "w") as jar_zip:
       jar_zip.writestr("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n")
       jar_zip.writestr("Test.java", "public class Test {}")
 
-    info = get_file_info(jar_path)
+    info = get_file_info(str(jar_path))
 
-    assert info["suffix"] == ".jar"
-    assert "jar_validation" in info
-    assert info["jar_validation"]["status"] == "valid"
+    assert info["name"] == "test.jar"
+    assert info["line_count"] == 0  # Binary JAR file should have 0 lines
+    assert "B" in info["size"] or "KB" in info["size"]
 
   def test_get_file_info_nonexistent(self, temp_dir: Path) -> None:
     """Test file info for nonexistent path."""
