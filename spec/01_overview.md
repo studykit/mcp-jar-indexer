@@ -54,7 +54,7 @@ JAR Indexer MCP 서버는 다음과 같은 방식으로 이 문제를 해결합�
 
 ### 3. MCP Tools (14개)
 
-![[03_mcp_tool_specification#용도에 따른 분류]]
+![[03_mcp_tool_specification#Tool Categories]]
 
 
 이 프로젝트를 통해 Claude Code는 Java/Kotlin 생태계의 방대한 오픈소스 라이브러리 소스코드에 직접 접근하여 더욱 정확하고 깊이 있는 코드 분석을 제공할 수 있게 됩니다.

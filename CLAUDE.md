@@ -25,10 +25,18 @@ For complete development command reference, consult `guide/suggested_commands.md
 ## When to Reference Documentation
 
 ### Specification Documents
-- **Project Understanding**: `spec/01_overview.md` - Reference when you need business context, problem definition, and use case scenarios. Essential for understanding project goals and requirements.
-- **System Design**: `spec/02_architecture.md` - Reference when working with component interactions, storage paths, error handling flows, or understanding data flow between MCP tools and storage layers. Critical for structural changes and debugging.
-- **MCP Tool Implementation**: `spec/03_mcp_tool_specification.md` - Reference when implementing new MCP tools, understanding tool schemas, or checking complete tool requirements.
-- **Implementation Details**: `spec/dev/` - Reference for specific tool implementation patterns, development workflows, and detailed technical specifications.
+For comprehensive guidance on when and how to use specification documents, see **`spec/CLAUDE.md`** which provides:
+- Detailed descriptions of each specification document's purpose
+- When to reference specific files for different types of work
+- Document relationships and dependencies
+- Current implementation status and progress tracking
+- Complete folder structure and content overviews
+
+**Quick Reference**:
+- `spec/01_overview.md` - Business context and project goals
+- `spec/02_architecture.md` - System design and data flow
+- `spec/03_mcp_tool_specification.md` - Complete MCP tool API contracts
+- `spec/dev/` - Implementation plans and detailed technical specifications
 
 ### Guide Documents
 - **Code Standards**: `guide/code_style_guide.md` - Reference when writing new code, implementing functions, or making code quality improvements. Essential for indentation standards (2-space rule), type annotation requirements (always explicit), naming conventions, docstring formatting, error handling patterns, and testing standards.

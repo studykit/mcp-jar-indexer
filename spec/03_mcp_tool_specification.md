@@ -104,7 +104,7 @@ index_artifact(
 ```json
 {
   "status": "success",
-  "cache_location": "~/.jar-indexer/code/org.springframework/spring-core/5.3.21",
+  "cache_location": "code/org.springframework/spring-core/5.3.21",
   "processing_time": "2.3s"
 }
 ```
@@ -565,8 +565,7 @@ search_file_names(
       "name": "File.java",
       "path": "path/to/File.java",
       "size": "1KB",
-      "line_count": 50,
-      "depth": 0
+      "line_count": 50
     }
   ]
 }
