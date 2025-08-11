@@ -129,28 +129,32 @@ async def register_source(
     else:
       raise UnsupportedSourceTypeError(f"Unsupported URI type: {uri_type}")
 
-    # TODO: Implement auto_index functionality when index_artifact tool is ready
+    # Auto-index if requested
     if auto_index:
-      # For now, just return registered_only until indexing is implemented
-      indexed = False
-      status = "registered_only"
-      message = (
-        "Source registered successfully. Use index_artifact tool to perform indexing."
-      )
-    else:
-      indexed = False
-      status = "registered_only"
-      message = (
-        "Source registered successfully. Use index_artifact tool to perform indexing."
-      )
-
+      try:
+        from .index_artifact import index_artifact
+        result = await index_artifact(group_id, artifact_id, version)
+        
+        # Return the actual artifact status from index_artifact
+        return {
+          "group_id": group_id,
+          "artifact_id": artifact_id,
+          "version": version,
+          "status": result.get("status", "unknown"),
+        }
+      except Exception as e:
+        logger.warning(f"Auto-indexing failed: {e}")
+        # Fall through to registration-only response
+    
+    # Get current artifact status without indexing
+    from .list_artifacts import get_artifact_status
+    current_status = get_artifact_status(storage_manager, group_id, artifact_id, version)
+    
     return {
       "group_id": group_id,
       "artifact_id": artifact_id,
       "version": version,
-      "status": status,
-      "indexed": indexed,
-      "message": message,
+      "status": current_status,
     }
 
   except GitCloneFailedError as e:

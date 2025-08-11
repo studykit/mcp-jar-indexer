@@ -13,7 +13,7 @@
 │  MCP Tools (14개)                                   │
 │  ├─ register_source        ├─ get_import_section    │
 │  ├─ index_artifact         ├─ get_method_source     │
-│  ├─ list_indexed_artifacts ├─ list_folder_tree      │
+│  ├─ list_artifacts         ├─ list_folder_tree      │
 │  ├─ list_packages          ├─ search_file_names     │
 │  ├─ list_types             ├─ search_file_content   │
 │  ├─ get_type_source        ├─ get_file              │

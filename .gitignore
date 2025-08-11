@@ -132,3 +132,4 @@ cython_debug/
 .obsidian/
 .serena/cache/
 .ruff_cache/
+.claude/settings.local.json

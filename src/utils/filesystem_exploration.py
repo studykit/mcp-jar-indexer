@@ -278,6 +278,7 @@ def search_files_by_pattern(
           relative_path = item.relative_to(base)
 
           if pattern_type == "glob":
+            # Match pattern against filename only (not full path)
             if item.match(pattern):
               try:
                 file_info = get_file_info(str(item))

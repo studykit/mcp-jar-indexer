@@ -246,6 +246,26 @@ class TestSearchFilesByPattern:
     assert "Utils.java" in java_files
     # Main.java should not be found as it's in subdir
 
+  def test_search_files_by_pattern_glob_simple(self, sample_directory: Path) -> None:
+    """Test searching with simple glob patterns."""
+    # Search for exact filename
+    result = search_files_by_pattern(str(sample_directory), "Test.java", "glob")
+    assert len(result["files"]) == 1
+    assert result["files"][0]["name"] == "Test.java"
+
+    # Search with glob pattern
+    result = search_files_by_pattern(str(sample_directory), "*.java", "glob")
+    java_files = {f["name"] for f in result["files"]}
+    assert "Test.java" in java_files
+    assert "Utils.java" in java_files
+    assert "Main.java" in java_files  # should find in subdirectories too
+    assert "readme.txt" not in java_files
+
+    # Search with partial glob pattern
+    result = search_files_by_pattern(str(sample_directory), "Test*", "glob")
+    assert len(result["files"]) == 1
+    assert result["files"][0]["name"] == "Test.java"
+
   def test_search_files_by_pattern_start_path(self, sample_directory: Path) -> None:
     """Test searching from specific start path."""
     result = search_files_by_pattern(

@@ -126,32 +126,37 @@ Based on `spec/dev/index_artifact/phase_1/design_spec.md`, this TODO organizes i
 ## Phase 6: MCP Tool Layer
 
 ### 6.1 Primary MCP Tools
-- [ ] `index_artifact(group_id, artifact_id, version) -> IndexArtifactResult`
+- [x] `index_artifact(group_id, artifact_id, version) -> IndexArtifactResult`
   - Main artifact indexing tool
   - Depends on: Most functions from phases 1-4
   - **Complex logic**: Check indexed → Check available → Extract source → Create index
+  - **Status**: ✅ Implemented in tools/index_artifact.py with comprehensive tests
 
 ### 6.2 Browse MCP Tools
-- [ ] `list_folder_tree(group_id, artifact_id, version, path, include_files, max_depth) -> ListFolderTreeResult`
+- [x] `list_folder_tree(group_id, artifact_id, version, path, include_files, max_depth) -> ListFolderTreeResult`
   - Directory structure exploration
   - Depends on: `validate_maven_coordinates`, `list_directory_tree`
+  - **Status**: ✅ Implemented in tools/list_folder_tree.py with comprehensive tests
 
-- [ ] `get_file(group_id, artifact_id, version, file_path, start_line, end_line) -> GetFileResult`
+- [x] `get_file(group_id, artifact_id, version, file_path, start_line, end_line) -> GetFileResult`
   - File content retrieval
   - Depends on: `validate_maven_coordinates`, `get_file_content`
+  - **Status**: ✅ Implemented in tools/get_file.py with comprehensive tests
 
 ### 6.3 Search MCP Tools
-- [ ] `search_file_names(group_id, artifact_id, version, pattern, pattern_type, start_path, max_depth) -> SearchFileNamesResult`
+- [x] `search_file_names(group_id, artifact_id, version, pattern, pattern_type, start_path, max_depth) -> SearchFileNamesResult`
   - File name search tool
   - Depends on: `validate_maven_coordinates`, `search_files_by_pattern`
+  - **Status**: ✅ Implemented in tools/search_file_names.py with comprehensive tests
 
-- [ ] `search_file_content(group_id, artifact_id, version, query, query_type, start_path, max_depth, context_before, context_after, max_results) -> SearchFileContentMcpResult`
+- [x] `search_file_content(group_id, artifact_id, version, query, query_type, start_path, max_depth, context_before, context_after, max_results) -> SearchFileContentMcpResult`
   - File content search tool
   - Depends on: `validate_maven_coordinates`, `search_file_contents`
+  - **Status**: ✅ Implemented in tools/search_file_content.py with comprehensive tests
 
 ## Implementation Status
 
-### ✅ COMPLETED (17/32 functions)
+### ✅ COMPLETED (22/22 functions)
 **High Priority (Core Dependencies):**
 1. ✅ **Phase 1: Foundation utilities** (3/3 functions completed)
    - `validate_maven_coordinates` ✅
@@ -180,9 +185,9 @@ Based on `spec/dev/index_artifact/phase_1/design_spec.md`, this TODO organizes i
    - `search_files_by_pattern` ✅
    - `search_file_contents` ✅
 
-### 🚧 REMAINING (15/32 functions)
+### ✅ COMPLETED (22/22 functions)
 **Final Priority (Interface Layer):**
-6. ⏳ **Phase 6: MCP tools** (0/5 functions completed)
+6. ✅ **Phase 6: MCP tools** (5/5 functions completed)
 
 ## Implementation Priority
 

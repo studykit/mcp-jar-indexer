@@ -8,7 +8,7 @@ MCP server providing 14 tools to index and explore Java/Kotlin library source co
 **Management (3 tools):**
 - `register_source` - Register JAR files, directories, or Git repositories
 - `index_artifact` - Index registered sources for exploration  
-- `list_indexed_artifacts` - List available indexed artifacts
+- `list_artifacts` - List artifacts and check their status (source/index/extracted)
 
 **Package/Type Exploration (3 tools):**
 - `list_packages` - Browse package structure hierarchy
@@ -79,8 +79,7 @@ register_source(
   "group_id": "org.springframework",
   "artifact_id": "spring-core", 
   "version": "5.3.21",
-  "status": "registered_and_indexed", // "registered_only" when auto_index=false
-  "indexed": true // false when auto_index=false
+  "status": "source-git,file-searchable" // actual artifact status: "source-jar", "source-git", or "source-dir" + ",file-searchable" when auto_index=true
 }
 ```
 
@@ -110,17 +109,18 @@ index_artifact(
 ```
 
 
-#### list_indexed_artifacts
-List all indexed artifacts with optional filtering and pagination.
+#### list_artifacts
+List all artifacts and check their status (source type and availability, index existence, file searchability).
 
 **Parameters:**
 - `page`, `page_size` - Pagination controls (optional)
 - `group_filter`, `artifact_filter` - Filter by coordinates (optional)
 - `version_filter` - Version constraints: `"5.3.21"`, `">=5.3.0"`, `"<6.0.0"`, `">=5.0.0,<6.0.0"` (optional)
+- `status_filter` - Filter by status components: `"source-jar"`, `"source-git"`, `"source-dir"`, `"index"`, `"file-searchable"` (optional, comma-separated)
 
 **Request:**
 ```python
-list_indexed_artifacts(
+list_artifacts(
     page: 1,
     page_size: 50,
     group_filter: "org.springframework",
@@ -143,17 +143,33 @@ list_indexed_artifacts(
       "group_id": "org.springframework",
       "artifact_id": "spring-core",
       "version": "5.3.21",
-      "status": "indexed"
+      "status": "source-jar,index,file-searchable"  // Comma-separated: source-jar (JAR exists), index (indexed), file-searchable (file browser tools available)
     },
     {
       "group_id": "io.netty",
       "artifact_id": "netty-common",
       "version": "4.1.79.Final",
-      "status": "failed"
+      "status": "source-git"              // Only Git repository registered, not indexed yet
     }
   ]
 }
 ```
+
+**Status Values:**
+- `source-jar` - Source JAR file is registered and exists
+- `source-git` - Git repository is registered and cloned
+- `source-dir` - Source directory is registered and exists
+- `index` - Artifact has been indexed (index.json exists)  
+- `file-searchable` - Files are searchable (sources/ directory extracted and file browser tools available)
+
+Common combinations:
+- `""` - Nothing registered
+- `"source-jar"` - JAR file registered but not indexed
+- `"source-git"` - Git repository registered but not indexed  
+- `"source-dir"` - Directory registered but not indexed
+- `"source-jar,index,file-searchable"` - JAR fully indexed with file browser tools available
+- `"source-git,index,file-searchable"` - Git repository fully indexed with file browser tools available
+- `"source-dir,index,file-searchable"` - Directory fully indexed with file browser tools available
 
 
 ### Package/Type Exploration Tools
@@ -531,14 +547,42 @@ list_folder_tree(
 #### search_file_names
 Find files by name patterns using glob or regex matching.
 
+**Important:** This API searches for files by **filename only**, not by path. The search is always **recursive** - it will search through all subdirectories under the starting path. The `pattern` parameter should contain only filename patterns (e.g., `*.java`, `MANIFEST.MF`, `Test*.class`) and should not include directory separators (`/`). Use the `start_path` parameter to specify the directory where the search should begin.
+
 **Parameters:**
 - `group_id`, `artifact_id`, `version` - Maven coordinates (required)
-- `pattern` - Search pattern (required)
+- `pattern` - Filename pattern only, no path separators allowed (required)
 - `pattern_type` - Pattern type: "glob" or "regex" (required)
-- `start_path` - Starting directory (optional, defaults to root)
+- `start_path` - Starting directory path (optional, defaults to root)
 - `max_depth` - Search depth limit (optional, default: unlimited)
 
-**Request:**
+**Pattern Examples:**
+
+**Glob patterns** (pattern_type: "glob"):
+- ✅ Correct: `MANIFEST.MF`, `*.java`, `Test*.class`, `StringUtils*.java`, `*Utils.xml`
+- ❌ Incorrect: `META-INF/MANIFEST.MF`, `src/**/*.java`, `*/pom.xml`, `**/*.class`
+
+**Regex patterns** (pattern_type: "regex"):
+- ✅ Correct: `MANIFEST\.MF`, `.*\.java$`, `^Test.*\.class$`, `StringUtils.*\.java`
+- ❌ Incorrect: `META-INF/MANIFEST\.MF`, `src/.*/.*\.java$`, `.*/pom\.xml$`
+
+**Note:** Both glob and regex patterns match **filename only** - directory paths are not allowed in patterns.
+
+**Request Examples:**
+
+Find all MANIFEST.MF files in META-INF directory:
+```python
+search_file_names(
+    group_id: "org.junit.jupiter",
+    artifact_id: "junit-jupiter-engine", 
+    version: "5.10.2",
+    pattern: "MANIFEST.MF",
+    pattern_type: "glob",
+    start_path: "META-INF"
+)
+```
+
+Find StringUtils Java files in specific package:
 ```python
 search_file_names(
     group_id: "org.springframework",
@@ -666,7 +710,7 @@ get_file(
 **Setup Workflow:**
 1. `register_source` - Register JAR/directory/Git repository
 2. `index_artifact` - Index the source (if auto_index=false)
-3. `list_indexed_artifacts` - Verify indexing completed
+3. `list_artifacts` - Check artifact status (source/index/extracted)
 
 **Code Exploration Workflows:**
 - **Package Structure**: `list_packages` → `list_types` → `get_type_source`

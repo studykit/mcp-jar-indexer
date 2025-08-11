@@ -48,12 +48,13 @@ class FileInfo(TypedDict):
   line_count: int  # Number of lines in text file
 
 
-class IndexArtifactResult(TypedDict):
+class IndexArtifactResult(TypedDict, total=False):
   """index_artifact MCP tool response"""
 
   status: str  # "success" or error code
   cache_location: str  # Source code location (on success)
   processing_time: str  # Processing time (on success)
+  message: str  # Error message (on error only)
 
 
 class SearchFileContentMcpResult(TypedDict):

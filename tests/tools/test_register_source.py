@@ -87,15 +87,17 @@ class TestRegisterSource:
         "src.tools.register_source._handle_local_jar_file", new_callable=AsyncMock
       ) as mock_handle_jar,
     ):
-      result = await register_source(**valid_params, auto_index=False)
+      # Mock get_artifact_status from list_artifacts module
+      with patch("src.tools.list_artifacts.get_artifact_status", return_value="source-jar"):
+        result = await register_source(**valid_params, auto_index=False)
 
-      assert result["group_id"] == "org.springframework"
-      assert result["artifact_id"] == "spring-core"
-      assert result["version"] == "5.3.21"
-      assert result["status"] == "registered_only"
-      assert result["indexed"] is False
-      assert "registered successfully" in result["message"]
-      mock_handle_jar.assert_called_once()
+        assert result["group_id"] == "org.springframework"
+        assert result["artifact_id"] == "spring-core"
+        assert result["version"] == "5.3.21"
+        assert result["status"] == "source-jar"  # Only source status without file-searchable
+        assert "indexed" not in result  # indexed field should be removed
+        assert "message" not in result  # message field should be removed
+        mock_handle_jar.assert_called_once()
 
   @pytest.mark.asyncio
   async def test_register_source_success_jar_auto_index_true(
@@ -118,15 +120,20 @@ class TestRegisterSource:
         "src.tools.register_source._handle_local_jar_file", new_callable=AsyncMock
       ) as mock_handle_jar,
     ):
-      result = await register_source(**valid_params)  # auto_index=True by default
+      # Mock index_artifact to return successful indexing result
+      with (
+        patch("src.tools.index_artifact.index_artifact", new_callable=AsyncMock) as mock_index_artifact,
+        patch("src.tools.list_artifacts.get_artifact_status", return_value="source-jar,file-searchable"),
+      ):
+        # Configure mock_index_artifact to return success
+        mock_index_artifact.return_value = {"status": "source-jar,file-searchable"}
+        
+        result = await register_source(**valid_params)  # auto_index=True by default
 
-      assert (
-        result["status"] == "registered_only"
-      )  # TODO: Will be "registered_and_indexed" when indexing is implemented
-      assert (
-        result["indexed"] is False
-      )  # TODO: Will be True when indexing is implemented
-      mock_handle_jar.assert_called_once()
+        assert result["status"] == "source-jar,file-searchable"
+        assert "indexed" not in result  # indexed field should be removed
+        mock_handle_jar.assert_called_once()
+        mock_index_artifact.assert_called_once_with("org.springframework", "spring-core", "5.3.21")
 
   @pytest.mark.asyncio
   async def test_register_source_directory_type(
@@ -152,10 +159,20 @@ class TestRegisterSource:
         "src.tools.register_source._handle_local_directory", new_callable=AsyncMock
       ) as mock_handle_dir,
     ):
-      result = await register_source(**valid_params)
+      # Mock index_artifact and get_artifact_status
+      with (
+        patch("src.tools.index_artifact.index_artifact", new_callable=AsyncMock) as mock_index_artifact,
+        patch("src.tools.list_artifacts.get_artifact_status", return_value="source-dir"),
+      ):
+        # Configure mock_index_artifact to return success
+        mock_index_artifact.return_value = {"status": "source-dir,file-searchable"}
+        
+        result = await register_source(**valid_params)
 
-      assert result["status"] == "registered_only"
-      mock_handle_dir.assert_called_once()
+        assert result["status"] == "source-dir,file-searchable"
+        assert "indexed" not in result
+        mock_handle_dir.assert_called_once()
+        mock_index_artifact.assert_called_once_with("org.springframework", "spring-core", "5.3.21")
 
   @pytest.mark.asyncio
   async def test_register_source_http_jar(
@@ -183,10 +200,20 @@ class TestRegisterSource:
         "src.tools.register_source._handle_remote_jar_file", new_callable=AsyncMock
       ) as mock_handle_remote,
     ):
-      result = await register_source(**valid_params)
+      # Mock index_artifact and get_artifact_status
+      with (
+        patch("src.tools.index_artifact.index_artifact", new_callable=AsyncMock) as mock_index_artifact,
+        patch("src.tools.list_artifacts.get_artifact_status", return_value="source-jar"),
+      ):
+        # Configure mock_index_artifact to return success
+        mock_index_artifact.return_value = {"status": "source-jar,file-searchable"}
+        
+        result = await register_source(**valid_params)
 
-      assert result["status"] == "registered_only"
-      mock_handle_remote.assert_called_once()
+        assert result["status"] == "source-jar,file-searchable"
+        assert "indexed" not in result
+        mock_handle_remote.assert_called_once()
+        mock_index_artifact.assert_called_once_with("org.springframework", "spring-core", "5.3.21")
 
   @pytest.mark.asyncio
   async def test_register_source_git_repository(
@@ -217,17 +244,27 @@ class TestRegisterSource:
         "src.tools.register_source._handle_git_repository", new_callable=AsyncMock
       ) as mock_handle_git,
     ):
-      result = await register_source(**valid_params)
+      # Mock index_artifact and get_artifact_status
+      with (
+        patch("src.tools.index_artifact.index_artifact", new_callable=AsyncMock) as mock_index_artifact,
+        patch("src.tools.list_artifacts.get_artifact_status", return_value="source-git"),
+      ):
+        # Configure mock_index_artifact to return success
+        mock_index_artifact.return_value = {"status": "source-git,file-searchable"}
+        
+        result = await register_source(**valid_params)
 
-      assert result["status"] == "registered_only"
-      mock_handle_git.assert_called_once_with(
-        mock_storage_manager,
-        {"url": "https://github.com/spring-projects/spring-framework.git"},
-        "v5.3.21",
+        assert result["status"] == "source-git,file-searchable"
+        assert "indexed" not in result
+        mock_handle_git.assert_called_once_with(
+          mock_storage_manager,
+          {"url": "https://github.com/spring-projects/spring-framework.git"},
+          "v5.3.21",
         "org.springframework",
         "spring-core",
         "5.3.21",
-      )
+        )
+        mock_index_artifact.assert_called_once_with("org.springframework", "spring-core", "5.3.21")
 
   @pytest.mark.asyncio
   async def test_register_source_git_repository_default_ref(

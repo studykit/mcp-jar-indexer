@@ -11,13 +11,7 @@ import requests
 from src.utils.download_utils import download_file, validate_jar_file
 from src.utils.source_extraction import safe_copy_file, safe_symlink, safe_copy_tree
 from src.utils.filesystem_exploration import get_file_info
-from src.utils.path_utils import ensure_directory, normalize_path, calculate_directory_depth
-from src.utils.artifact_utils import (
-  get_artifact_code_path,
-  is_artifact_code_available,
-  is_artifact_code_indexed,
-  get_registered_source_info,
-)
+from src.utils.path_utils import ensure_directory
 
 
 class TestDownloadFile:
