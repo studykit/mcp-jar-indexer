@@ -16,7 +16,7 @@ uv run python -m src.main
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/your-username/jar-indexer.git
+git clone https://github.com/studykit/mcp-jar-indexer.git
 cd jar-indexer
 ```
 
